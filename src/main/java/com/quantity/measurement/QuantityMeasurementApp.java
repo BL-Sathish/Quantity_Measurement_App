@@ -5,27 +5,8 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
 public class QuantityMeasurementApp {
-
     public static void main(String[] args) {
         SpringApplication.run(QuantityMeasurementApp.class, args);
-
-        // UC5: Unit-to-Unit Conversion demonstration
-        System.out.println("=== UC5: Unit Conversion Demo ===");
-        demonstrateLengthConversion(1.0, LengthUnit.FEET, LengthUnit.INCH);
-        demonstrateLengthConversion(3.0, LengthUnit.YARD, LengthUnit.FEET);
-        demonstrateLengthConversion(36.0, LengthUnit.INCH, LengthUnit.YARD);
-        demonstrateLengthConversion(1.0, LengthUnit.CENTIMETER, LengthUnit.INCH);
-        demonstrateLengthConversion(0.0, LengthUnit.FEET, LengthUnit.INCH);
-
-        // Overloaded form: pass a QuantityLength instance directly
-        System.out.println("\n=== Overloaded demonstrateLengthConversion ===");
-        QuantityLength lengthInYards = new QuantityLength(1.0, LengthUnit.YARD);
-        demonstrateLengthConversion(lengthInYards, LengthUnit.INCH);
-
-        // Equality demonstration
-        System.out.println("\n=== Equality Demo ===");
-        demonstrateLengthComparison(1.0, LengthUnit.FEET, 12.0, LengthUnit.INCH);
-        demonstrateLengthComparison(1.0, LengthUnit.YARD, 3.0, LengthUnit.FEET);
 
         // UC6: Addition demonstration
         System.out.println("\n=== UC6: Addition Demo ===");
@@ -37,19 +18,28 @@ public class QuantityMeasurementApp {
         demonstrateAddition(2.54, LengthUnit.CENTIMETER, 1.0, LengthUnit.INCH);
         demonstrateAddition(5.0, LengthUnit.FEET, 0.0, LengthUnit.INCH);
         demonstrateAddition(5.0, LengthUnit.FEET, -2.0, LengthUnit.FEET);
+
+        // UC7: Addition with explicit target unit demonstration
+        System.out.println("\n=== UC7: Addition with Target Unit Demo ===");
+        demonstrateAddition(1.0, LengthUnit.FEET, 12.0, LengthUnit.INCH, LengthUnit.FEET);
+        demonstrateAddition(1.0, LengthUnit.FEET, 12.0, LengthUnit.INCH, LengthUnit.INCH);
+        demonstrateAddition(1.0, LengthUnit.FEET, 12.0, LengthUnit.INCH, LengthUnit.YARD);
+        demonstrateAddition(1.0, LengthUnit.YARD, 3.0, LengthUnit.FEET, LengthUnit.YARD);
+        demonstrateAddition(36.0, LengthUnit.INCH, 1.0, LengthUnit.YARD, LengthUnit.FEET);
+        demonstrateAddition(2.54, LengthUnit.CENTIMETER, 1.0, LengthUnit.INCH, LengthUnit.CENTIMETER);
+        demonstrateAddition(5.0, LengthUnit.FEET, 0., LengthUnit.INCH, LengthUnit.YARD);
+        demonstrateAddition(5.0, LengthUnit.FEET, -2.0, LengthUnit.FEET, LengthUnit.INCH);
     }
 
     // ─────────────────────────────────────────────
     // Overloaded demonstrateLengthConversion
     // ─────────────────────────────────────────────
-
     /**
      * Method 1: Takes raw value and two units — converts and prints result.
      */
     public static void demonstrateLengthConversion(double value, LengthUnit fromUnit, LengthUnit toUnit) {
         double result = QuantityLength.convert(value, fromUnit, toUnit);
-        System.out.printf("Input: convert(%.4f, %s, %s) → Output: %.4f%n",
-                value, fromUnit, toUnit, result);
+        System.out.printf("Input: convert(%.4f, %s, %s) → Output: %.4f%n", value, fromUnit, toUnit, result);
     }
 
     /**
@@ -58,14 +48,35 @@ public class QuantityMeasurementApp {
      */
     public static void demonstrateLengthConversion(QuantityLength length, LengthUnit toUnit) {
         QuantityLength converted = length.convertTo(toUnit);
-        System.out.printf("Input: %s.convertTo(%s) → Output: %s%n",
-                length, toUnit, converted);
+        System.out.printf("Input: %s.convertTo(%s) → Output: %s%n", length, toUnit, converted);
+    }
+
+    // ─────────────────────────────────────────────
+    // Addition API (UC6 & UC7)
+    // ─────────────────────────────────────────────
+    /**
+     * Demonstrates addition of two lengths using the default target (first operand's unit).
+     */
+    public static void demonstrateAddition(double val1, LengthUnit unit1, double val2, LengthUnit unit2) {
+        QuantityLength q1 = new QuantityLength(val1, unit1);
+        QuantityLength q2 = new QuantityLength(val2, unit2);
+        QuantityLength sum = q1.add(q2);
+        System.out.printf("Input: add(%s, %s)\nOutput: %s\n\n", q1, q2, sum);
+    }
+
+    /**
+     * Demonstrates addition of two lengths with an explicit target unit.
+     */
+    public static void demonstrateAddition(double val1, LengthUnit unit1, double val2, LengthUnit unit2, LengthUnit targetUnit) {
+        QuantityLength q1 = new QuantityLength(val1, unit1);
+        QuantityLength q2 = new QuantityLength(val2, unit2);
+        QuantityLength sum = QuantityLength.add(q1, q2, targetUnit);
+        System.out.printf("Input: add(%s, %s, %s)\nOutput: %s\n\n", q1, q2, targetUnit, sum);
     }
 
     // ─────────────────────────────────────────────
     // Equality & comparison API
     // ─────────────────────────────────────────────
-
     /**
      * Checks and prints equality of two QuantityLength objects.
      */
@@ -77,23 +88,9 @@ public class QuantityMeasurementApp {
      * Creates two QuantityLength instances from raw values and delegates to demonstrateLengthEquality.
      */
     public static void demonstrateLengthComparison(double val1, LengthUnit unit1,
-                                                    double val2, LengthUnit unit2) {
+                                                   double val2, LengthUnit unit2) {
         QuantityLength a = new QuantityLength(val1, unit1);
         QuantityLength b = new QuantityLength(val2, unit2);
         demonstrateLengthEquality(a, b);
-    }
-
-    // ─────────────────────────────────────────────
-    // Addition API (UC6)
-    // ─────────────────────────────────────────────
-
-    /**
-     * Demonstrates addition of two lengths and prints the result.
-     */
-    public static void demonstrateAddition(double val1, LengthUnit unit1, double val2, LengthUnit unit2) {
-        QuantityLength q1 = new QuantityLength(val1, unit1);
-        QuantityLength q2 = new QuantityLength(val2, unit2);
-        QuantityLength sum = q1.add(q2);
-        System.out.printf("Input: add(%s, %s)\nOutput: %s\n\n", q1, q2, sum);
     }
 }

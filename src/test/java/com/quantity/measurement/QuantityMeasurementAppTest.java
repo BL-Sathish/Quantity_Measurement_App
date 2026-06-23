@@ -382,4 +382,25 @@ class QuantityMeasurementAppTest {
         assertTrue(result.equals(new QuantityLength(0.003, LengthUnit.FEET)));
     }
 
+    @Test
+    void testAddition_WithTargetUnit_FeetAndInches_ToYards() {
+        QuantityLength q1 = new QuantityLength(1.0, LengthUnit.FEET);
+        QuantityLength q2 = new QuantityLength(12.0, LengthUnit.INCH);
+        QuantityLength result = QuantityLength.add(q1, q2, LengthUnit.YARD);
+        // 1 foot + 12 inches = 2 feet = 0.666666... yards
+        assertTrue(result.equals(new QuantityLength(2.0/3.0, LengthUnit.YARD)));
+    }
+
+    @Test
+    void testAddition_StaticRaw_WithTargetUnit_ToYards() {
+        QuantityLength result = QuantityLength.add(1.0, LengthUnit.FEET, 12.0, LengthUnit.INCH, LengthUnit.YARD);
+        assertTrue(result.equals(new QuantityLength(2.0/3.0, LengthUnit.YARD)));
+    }
+
+    @Test
+    void testAddition_WithTargetUnit_NullOperand() {
+        QuantityLength q1 = new QuantityLength(1.0, LengthUnit.FEET);
+        assertThrows(IllegalArgumentException.class, () -> QuantityLength.add(q1, null, LengthUnit.FEET));
+    }
 }
+
