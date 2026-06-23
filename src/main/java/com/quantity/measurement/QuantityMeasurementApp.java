@@ -27,8 +27,45 @@ public class QuantityMeasurementApp {
         demonstrateAddition(1.0, LengthUnit.YARD, 3.0, LengthUnit.FEET, LengthUnit.YARD);
         demonstrateAddition(36.0, LengthUnit.INCH, 1.0, LengthUnit.YARD, LengthUnit.FEET);
         demonstrateAddition(2.54, LengthUnit.CENTIMETER, 1.0, LengthUnit.INCH, LengthUnit.CENTIMETER);
-        demonstrateAddition(5.0, LengthUnit.FEET, 0., LengthUnit.INCH, LengthUnit.YARD);
+        demonstrateAddition(5.0, LengthUnit.FEET, 0.0, LengthUnit.INCH, LengthUnit.YARD);
         demonstrateAddition(5.0, LengthUnit.FEET, -2.0, LengthUnit.FEET, LengthUnit.INCH);
+
+        // UC8: Refactored design — LengthUnit conversion responsibility demo
+        System.out.println("\n=== UC8: Standalone LengthUnit Conversion Demo ===");
+        demonstrateUnitConversion(LengthUnit.FEET, 12.0);
+        demonstrateUnitConversion(LengthUnit.INCH, 12.0);
+        demonstrateUnitConversion(LengthUnit.YARD, 1.0);
+        demonstrateUnitConversion(LengthUnit.CENTIMETER, 30.48);
+
+        System.out.println("\n--- Refactored API backward compatibility ---");
+        demonstrateLengthConversion(1.0, LengthUnit.FEET, LengthUnit.INCH);
+        demonstrateLengthConversion(new QuantityLength(1.0, LengthUnit.FEET), LengthUnit.INCH);
+        demonstrateLengthConversion(1.0, LengthUnit.YARD, LengthUnit.FEET);
+
+        System.out.println("\n--- Equality via refactored delegation ---");
+        demonstrateLengthEquality(
+                new QuantityLength(36.0, LengthUnit.INCH),
+                new QuantityLength(1.0, LengthUnit.YARD));
+        demonstrateLengthEquality(
+                new QuantityLength(1.0, LengthUnit.FEET),
+                new QuantityLength(12.0, LengthUnit.INCH));
+
+        System.out.println("\n--- Addition via refactored delegation ---");
+        demonstrateAddition(1.0, LengthUnit.FEET, 12.0, LengthUnit.INCH, LengthUnit.FEET);
+        demonstrateAddition(1.0, LengthUnit.YARD, 3.0, LengthUnit.FEET, LengthUnit.YARD);
+    }
+
+    // ─────────────────────────────────────────────
+    // UC8: LengthUnit direct conversion demo
+    // ─────────────────────────────────────────────
+    /**
+     * Demonstrates LengthUnit's own convertToBaseUnit and convertFromBaseUnit methods.
+     */
+    public static void demonstrateUnitConversion(LengthUnit unit, double value) {
+        double toBase   = unit.convertToBaseUnit(value);
+        double fromBase = unit.convertFromBaseUnit(toBase);
+        System.out.printf("Input: LengthUnit.%s.convertToBaseUnit(%.4f) → Output: %.4f%n", unit, value, toBase);
+        System.out.printf("Input: LengthUnit.%s.convertFromBaseUnit(%.4f) → Output: %.4f%n%n", unit, toBase, fromBase);
     }
 
     // ─────────────────────────────────────────────

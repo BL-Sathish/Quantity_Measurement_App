@@ -4,7 +4,7 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * Test suite covering UC3 (backward compat), UC4 (yards/cm), and UC5 (unit conversion).
+ * Test suite covering UC3–UC8.
  */
 class QuantityMeasurementAppTest {
 
@@ -382,19 +382,23 @@ class QuantityMeasurementAppTest {
         assertTrue(result.equals(new QuantityLength(0.003, LengthUnit.FEET)));
     }
 
+    // ─────────────────────────────────────────────
+    // UC7: Addition with Target Unit Specification
+    // ─────────────────────────────────────────────
+
     @Test
     void testAddition_WithTargetUnit_FeetAndInches_ToYards() {
         QuantityLength q1 = new QuantityLength(1.0, LengthUnit.FEET);
         QuantityLength q2 = new QuantityLength(12.0, LengthUnit.INCH);
         QuantityLength result = QuantityLength.add(q1, q2, LengthUnit.YARD);
         // 1 foot + 12 inches = 2 feet = 0.666666... yards
-        assertTrue(result.equals(new QuantityLength(2.0/3.0, LengthUnit.YARD)));
+        assertTrue(result.equals(new QuantityLength(2.0 / 3.0, LengthUnit.YARD)));
     }
 
     @Test
     void testAddition_StaticRaw_WithTargetUnit_ToYards() {
         QuantityLength result = QuantityLength.add(1.0, LengthUnit.FEET, 12.0, LengthUnit.INCH, LengthUnit.YARD);
-        assertTrue(result.equals(new QuantityLength(2.0/3.0, LengthUnit.YARD)));
+        assertTrue(result.equals(new QuantityLength(2.0 / 3.0, LengthUnit.YARD)));
     }
 
     @Test
@@ -402,5 +406,185 @@ class QuantityMeasurementAppTest {
         QuantityLength q1 = new QuantityLength(1.0, LengthUnit.FEET);
         assertThrows(IllegalArgumentException.class, () -> QuantityLength.add(q1, null, LengthUnit.FEET));
     }
-}
 
+    // ─────────────────────────────────────────────
+    // UC8: Standalone LengthUnit Enum Tests
+    // ─────────────────────────────────────────────
+
+    @Test
+    void testLengthUnitEnum_FeetConstant() {
+        assertEquals(1.0, LengthUnit.FEET.getConversionFactor(), EPSILON);
+    }
+
+    @Test
+    void testLengthUnitEnum_InchesConstant() {
+        assertEquals(1.0 / 12.0, LengthUnit.INCH.getConversionFactor(), EPSILON);
+    }
+
+    @Test
+    void testLengthUnitEnum_YardsConstant() {
+        assertEquals(3.0, LengthUnit.YARD.getConversionFactor(), EPSILON);
+    }
+
+    @Test
+    void testLengthUnitEnum_CentimetersConstant() {
+        assertEquals(1.0 / 30.48, LengthUnit.CENTIMETER.getConversionFactor(), EPSILON);
+    }
+
+    // ─────────────────────────────────────────────
+    // UC8: convertToBaseUnit tests
+    // ─────────────────────────────────────────────
+
+    @Test
+    void testConvertToBaseUnit_FeetToFeet() {
+        assertEquals(5.0, LengthUnit.FEET.convertToBaseUnit(5.0), EPSILON);
+    }
+
+    @Test
+    void testConvertToBaseUnit_InchesToFeet() {
+        assertEquals(1.0, LengthUnit.INCH.convertToBaseUnit(12.0), EPSILON);
+    }
+
+    @Test
+    void testConvertToBaseUnit_YardsToFeet() {
+        assertEquals(3.0, LengthUnit.YARD.convertToBaseUnit(1.0), EPSILON);
+    }
+
+    @Test
+    void testConvertToBaseUnit_CentimetersToFeet() {
+        assertEquals(1.0, LengthUnit.CENTIMETER.convertToBaseUnit(30.48), 1e-4);
+    }
+
+    // ─────────────────────────────────────────────
+    // UC8: convertFromBaseUnit tests
+    // ─────────────────────────────────────────────
+
+    @Test
+    void testConvertFromBaseUnit_FeetToFeet() {
+        assertEquals(2.0, LengthUnit.FEET.convertFromBaseUnit(2.0), EPSILON);
+    }
+
+    @Test
+    void testConvertFromBaseUnit_FeetToInches() {
+        assertEquals(12.0, LengthUnit.INCH.convertFromBaseUnit(1.0), EPSILON);
+    }
+
+    @Test
+    void testConvertFromBaseUnit_FeetToYards() {
+        assertEquals(1.0, LengthUnit.YARD.convertFromBaseUnit(3.0), EPSILON);
+    }
+
+    @Test
+    void testConvertFromBaseUnit_FeetToCentimeters() {
+        assertEquals(30.48, LengthUnit.CENTIMETER.convertFromBaseUnit(1.0), 1e-4);
+    }
+
+    // ─────────────────────────────────────────────
+    // UC8: Refactored QuantityLength delegation tests
+    // ─────────────────────────────────────────────
+
+    @Test
+    void testQuantityLengthRefactored_Equality() {
+        assertTrue(new QuantityLength(1.0, LengthUnit.FEET).equals(new QuantityLength(12.0, LengthUnit.INCH)));
+    }
+
+    @Test
+    void testQuantityLengthRefactored_ConvertTo() {
+        QuantityLength feet = new QuantityLength(1.0, LengthUnit.FEET);
+        QuantityLength inches = feet.convertTo(LengthUnit.INCH);
+        assertTrue(inches.equals(new QuantityLength(12.0, LengthUnit.INCH)));
+    }
+
+    @Test
+    void testQuantityLengthRefactored_Add() {
+        QuantityLength q1 = new QuantityLength(1.0, LengthUnit.FEET);
+        QuantityLength q2 = new QuantityLength(12.0, LengthUnit.INCH);
+        QuantityLength result = q1.add(q2);
+        assertTrue(result.equals(new QuantityLength(2.0, LengthUnit.FEET)));
+    }
+
+    @Test
+    void testQuantityLengthRefactored_AddWithTargetUnit() {
+        QuantityLength q1 = new QuantityLength(1.0, LengthUnit.FEET);
+        QuantityLength q2 = new QuantityLength(12.0, LengthUnit.INCH);
+        QuantityLength result = QuantityLength.add(q1, q2, LengthUnit.YARD);
+        assertTrue(result.equals(new QuantityLength(2.0 / 3.0, LengthUnit.YARD)));
+    }
+
+    @Test
+    void testQuantityLengthRefactored_NullUnit() {
+        assertThrows(IllegalArgumentException.class, () -> new QuantityLength(1.0, null));
+    }
+
+    @Test
+    void testQuantityLengthRefactored_InvalidValue() {
+        assertThrows(IllegalArgumentException.class, () -> new QuantityLength(Double.NaN, LengthUnit.FEET));
+    }
+
+    // ─────────────────────────────────────────────
+    // UC8: Backward compatibility – all UC1–UC7 operations via refactored design
+    // ─────────────────────────────────────────────
+
+    @Test
+    void testBackwardCompatibility_UC1EqualityTests() {
+        assertTrue(new QuantityLength(0.0, LengthUnit.FEET).equals(new QuantityLength(0.0, LengthUnit.FEET)));
+        assertFalse(new QuantityLength(0.0, LengthUnit.FEET).equals(new QuantityLength(1.0, LengthUnit.FEET)));
+    }
+
+    @Test
+    void testBackwardCompatibility_UC5ConversionTests() {
+        assertEquals(12.0, QuantityLength.convert(1.0, LengthUnit.FEET, LengthUnit.INCH), EPSILON);
+        assertEquals(36.0, QuantityLength.convert(1.0, LengthUnit.YARD, LengthUnit.INCH), EPSILON);
+        assertEquals(2.0, QuantityLength.convert(6.0, LengthUnit.FEET, LengthUnit.YARD), EPSILON);
+    }
+
+    @Test
+    void testBackwardCompatibility_UC6AdditionTests() {
+        QuantityLength q1 = new QuantityLength(1.0, LengthUnit.FEET);
+        QuantityLength q2 = new QuantityLength(12.0, LengthUnit.INCH);
+        QuantityLength result = q1.add(q2);
+        assertTrue(result.equals(new QuantityLength(2.0, LengthUnit.FEET)));
+    }
+
+    @Test
+    void testBackwardCompatibility_UC7AdditionWithTargetUnitTests() {
+        QuantityLength q1 = new QuantityLength(1.0, LengthUnit.FEET);
+        QuantityLength q2 = new QuantityLength(12.0, LengthUnit.INCH);
+        QuantityLength result = QuantityLength.add(q1, q2, LengthUnit.YARD);
+        assertTrue(result.equals(new QuantityLength(2.0 / 3.0, LengthUnit.YARD)));
+    }
+
+    // ─────────────────────────────────────────────
+    // UC8: Round-trip & immutability
+    // ─────────────────────────────────────────────
+
+    @Test
+    void testRoundTripConversion_RefactoredDesign() {
+        double original = 5.0;
+        double toInches = QuantityLength.convert(original, LengthUnit.FEET, LengthUnit.INCH);
+        double backToFeet = QuantityLength.convert(toInches, LengthUnit.INCH, LengthUnit.FEET);
+        assertEquals(original, backToFeet, EPSILON);
+    }
+
+    @Test
+    void testUnitImmutability() {
+        // Enum constants are inherently immutable and thread-safe
+        double factor1 = LengthUnit.FEET.getConversionFactor();
+        double factor2 = LengthUnit.FEET.getConversionFactor();
+        assertEquals(factor1, factor2, EPSILON);
+        assertSame(LengthUnit.FEET, LengthUnit.valueOf("FEET"));
+    }
+
+    // ─────────────────────────────────────────────
+    // UC8: Architectural scalability
+    // ─────────────────────────────────────────────
+
+    @Test
+    void testArchitecturalScalability_MultipleCategories() {
+        // Verify that LengthUnit is a standalone top-level class,
+        // not nested within QuantityLength — proves no circular dependency.
+        assertTrue(LengthUnit.class.isEnum());
+        assertNull(LengthUnit.class.getEnclosingClass(),
+                "LengthUnit must be a standalone top-level enum, not nested inside another class");
+    }
+}

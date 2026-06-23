@@ -4,13 +4,15 @@ import java.util.Objects;
 
 /**
  * Represents an immutable length measurement with a specific unit.
- * Supports equality comparison across units and explicit unit-to-unit conversion.
+ * Supports equality comparison across units, explicit unit-to-unit conversion,
+ * and addition of two lengths with optional target-unit specification.
  *
- * <p>Conversion formula: result = value × (sourceUnit.factor / targetUnit.factor)
- * where each unit's factor is the number of base units (INCH) it equals.</p>
+ * <p><strong>UC8 refactoring:</strong> All unit-specific conversion logic is
+ * delegated to {@link LengthUnit}. This class focuses solely on value
+ * comparison and arithmetic, upholding the Single Responsibility Principle.</p>
  *
- * <p>Instances are immutable: conversions return new instances rather than
- * modifying the current one, ensuring value-object semantics.</p>
+ * <p>Instances are immutable: conversions and additions return new instances
+ * rather than modifying the current one, ensuring value-object semantics.</p>
  */
 public class QuantityLength {
     private final double value;
@@ -35,7 +37,7 @@ public class QuantityLength {
     }
 
     // ─────────────────────────────────────────────
-    // Public API: conversion
+    // Public API: conversion (delegates to LengthUnit)
     // ─────────────────────────────────────────────
 
     /**
@@ -50,13 +52,13 @@ public class QuantityLength {
         if (targetUnit == null) {
             throw new IllegalArgumentException("Target unit cannot be null");
         }
-        double convertedValue = convertValue(this.value, this.unit, targetUnit);
+        double baseValue = this.unit.convertToBaseUnit(this.value);
+        double convertedValue = targetUnit.convertFromBaseUnit(baseValue);
         return new QuantityLength(convertedValue, targetUnit);
     }
 
     /**
      * Static convenience method: converts a raw numeric value from sourceUnit to targetUnit.
-     * Formula: result = value × (sourceUnit.factor / targetUnit.factor)
      *
      * @param value      the numeric measurement to convert
      * @param sourceUnit the unit of the input value (must not be null)
@@ -71,15 +73,16 @@ public class QuantityLength {
         if (!Double.isFinite(value)) {
             throw new IllegalArgumentException("Value must be a finite number, but was: " + value);
         }
-        return convertValue(value, sourceUnit, targetUnit);
+        double baseValue = sourceUnit.convertToBaseUnit(value);
+        return targetUnit.convertFromBaseUnit(baseValue);
     }
 
     // ─────────────────────────────────────────────
-    // Public API: Addition
+    // Public API: Addition (delegates to LengthUnit)
     // ─────────────────────────────────────────────
 
     /**
-     * Instance method to add another length. 
+     * Instance method to add another length.
      * The result is returned as a new QuantityLength in this instance's unit.
      *
      * @param other the length to add (must not be null)
@@ -90,8 +93,9 @@ public class QuantityLength {
         if (other == null) {
             throw new IllegalArgumentException("Cannot add a null quantity");
         }
-        double sumInBase = this.toBaseUnit() + other.toBaseUnit();
-        double sumInTargetUnit = sumInBase / this.unit.getBaseUnitConversionFactor();
+        double sumInBase = this.unit.convertToBaseUnit(this.value)
+                         + other.unit.convertToBaseUnit(other.value);
+        double sumInTargetUnit = this.unit.convertFromBaseUnit(sumInBase);
         return new QuantityLength(sumInTargetUnit, this.unit);
     }
 
@@ -108,8 +112,9 @@ public class QuantityLength {
         if (q1 == null || q2 == null || targetUnit == null) {
             throw new IllegalArgumentException("Arguments cannot be null");
         }
-        double sumInBase = q1.toBaseUnit() + q2.toBaseUnit();
-        double sumInTargetUnit = sumInBase / targetUnit.getBaseUnitConversionFactor();
+        double sumInBase = q1.unit.convertToBaseUnit(q1.value)
+                         + q2.unit.convertToBaseUnit(q2.value);
+        double sumInTargetUnit = targetUnit.convertFromBaseUnit(sumInBase);
         return new QuantityLength(sumInTargetUnit, targetUnit);
     }
 
@@ -146,25 +151,6 @@ public class QuantityLength {
     }
 
     // ─────────────────────────────────────────────
-    // Private helpers
-    // ─────────────────────────────────────────────
-
-    /**
-     * Core conversion: normalises value to the base unit (INCH), then converts to target.
-     */
-    private static double convertValue(double value, LengthUnit sourceUnit, LengthUnit targetUnit) {
-        double inBaseUnit = value * sourceUnit.getBaseUnitConversionFactor();
-        return inBaseUnit / targetUnit.getBaseUnitConversionFactor();
-    }
-
-    /**
-     * Returns this value expressed in the base unit (INCH) — used for equality comparison.
-     */
-    private double toBaseUnit() {
-        return this.value * this.unit.getBaseUnitConversionFactor();
-    }
-
-    // ─────────────────────────────────────────────
     // Object overrides
     // ─────────────────────────────────────────────
 
@@ -172,19 +158,22 @@ public class QuantityLength {
 
     /**
      * Two QuantityLength objects are equal if they represent the same physical length
-     * when both are converted to the common base unit (INCH), within an epsilon.
+     * when both are converted to the common base unit (FEET), within an epsilon.
      */
     @Override
     public boolean equals(Object obj) {
         if (this == obj) return true;
         if (obj == null || getClass() != obj.getClass()) return false;
         QuantityLength that = (QuantityLength) obj;
-        return Math.abs(this.toBaseUnit() - that.toBaseUnit()) <= EPSILON;
+        double thisBase = this.unit.convertToBaseUnit(this.value);
+        double thatBase = that.unit.convertToBaseUnit(that.value);
+        return Math.abs(thisBase - thatBase) <= EPSILON;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(Math.round(toBaseUnit() / EPSILON));
+        double base = this.unit.convertToBaseUnit(this.value);
+        return Objects.hash(Math.round(base / EPSILON));
     }
 
     /**
