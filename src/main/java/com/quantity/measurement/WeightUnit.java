@@ -9,7 +9,7 @@ package com.quantity.measurement;
  * <p>Mirrors the LengthUnit design from UC8, reinforcing consistency
  * across measurement categories.</p>
  */
-public enum WeightUnit {
+public enum WeightUnit implements IMeasurable {
 
     /** 1 kilogram = 1 kilogram (base unit). */
     KILOGRAM(1.0),

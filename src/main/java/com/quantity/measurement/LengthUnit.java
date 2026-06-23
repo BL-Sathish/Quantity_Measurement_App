@@ -13,7 +13,7 @@ package com.quantity.measurement;
  * <p>This design eliminates circular dependencies and establishes a scalable
  * pattern for future measurement categories (WeightUnit, VolumeUnit, etc.).</p>
  */
-public enum LengthUnit {
+public enum LengthUnit implements IMeasurable {
 
     /** 1 foot = 1 foot (base unit). */
     FEET(1.0),

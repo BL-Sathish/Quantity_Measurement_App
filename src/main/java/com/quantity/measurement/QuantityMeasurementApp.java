@@ -62,7 +62,7 @@ public class QuantityMeasurementApp {
 
         System.out.println("\n=== UC9: Category Incompatibility Demo ===");
         System.out.printf("Quantity(1.0, KILOGRAM).equals(Quantity(1.0, FEET)) → %b%n",
-                new QuantityWeight(1.0, WeightUnit.KILOGRAM).equals(new QuantityLength(1.0, LengthUnit.FEET)));
+                new Quantity<>(1.0, WeightUnit.KILOGRAM).equals(new Quantity<>(1.0, LengthUnit.FEET)));
     }
 
     // ─────────────────────────────────────────────
@@ -79,36 +79,36 @@ public class QuantityMeasurementApp {
     // Length: Conversion, Equality, Addition
     // ─────────────────────────────────────────────
     public static void demonstrateLengthConversion(double value, LengthUnit fromUnit, LengthUnit toUnit) {
-        double result = QuantityLength.convert(value, fromUnit, toUnit);
+        double result = Quantity.convert(value, fromUnit, toUnit);
         System.out.printf("Input: convert(%.4f, %s, %s) → Output: %.4f%n", value, fromUnit, toUnit, result);
     }
 
-    public static void demonstrateLengthConversion(QuantityLength length, LengthUnit toUnit) {
-        QuantityLength converted = length.convertTo(toUnit);
+    public static void demonstrateLengthConversion(Quantity<LengthUnit> length, LengthUnit toUnit) {
+        Quantity<LengthUnit> converted = length.convertTo(toUnit);
         System.out.printf("Input: %s.convertTo(%s) → Output: %s%n", length, toUnit, converted);
     }
 
     public static void demonstrateAddition(double val1, LengthUnit unit1, double val2, LengthUnit unit2) {
-        QuantityLength q1 = new QuantityLength(val1, unit1);
-        QuantityLength q2 = new QuantityLength(val2, unit2);
-        QuantityLength sum = q1.add(q2);
+        Quantity<LengthUnit> q1 = new Quantity<>(val1, unit1);
+        Quantity<LengthUnit> q2 = new Quantity<>(val2, unit2);
+        Quantity<LengthUnit> sum = q1.add(q2);
         System.out.printf("Input: add(%s, %s)\nOutput: %s\n\n", q1, q2, sum);
     }
 
     public static void demonstrateAddition(double val1, LengthUnit unit1, double val2, LengthUnit unit2, LengthUnit targetUnit) {
-        QuantityLength q1 = new QuantityLength(val1, unit1);
-        QuantityLength q2 = new QuantityLength(val2, unit2);
-        QuantityLength sum = QuantityLength.add(q1, q2, targetUnit);
+        Quantity<LengthUnit> q1 = new Quantity<>(val1, unit1);
+        Quantity<LengthUnit> q2 = new Quantity<>(val2, unit2);
+        Quantity<LengthUnit> sum = Quantity.add(q1, q2, targetUnit);
         System.out.printf("Input: add(%s, %s, %s)\nOutput: %s\n\n", q1, q2, targetUnit, sum);
     }
 
-    public static void demonstrateLengthEquality(QuantityLength a, QuantityLength b) {
+    public static void demonstrateLengthEquality(Quantity<LengthUnit> a, Quantity<LengthUnit> b) {
         System.out.printf("Equality: %s == %s → %b%n", a, b, a.equals(b));
     }
 
     public static void demonstrateLengthComparison(double val1, LengthUnit unit1, double val2, LengthUnit unit2) {
-        QuantityLength a = new QuantityLength(val1, unit1);
-        QuantityLength b = new QuantityLength(val2, unit2);
+        Quantity<LengthUnit> a = new Quantity<>(val1, unit1);
+        Quantity<LengthUnit> b = new Quantity<>(val2, unit2);
         demonstrateLengthEquality(a, b);
     }
 
@@ -116,28 +116,28 @@ public class QuantityMeasurementApp {
     // UC9: Weight demos
     // ─────────────────────────────────────────────
     public static void demonstrateWeightEquality(double val1, WeightUnit unit1, double val2, WeightUnit unit2) {
-        QuantityWeight a = new QuantityWeight(val1, unit1);
-        QuantityWeight b = new QuantityWeight(val2, unit2);
+        Quantity<WeightUnit> a = new Quantity<>(val1, unit1);
+        Quantity<WeightUnit> b = new Quantity<>(val2, unit2);
         System.out.printf("Equality: %s == %s → %b%n", a, b, a.equals(b));
     }
 
     public static void demonstrateWeightConversion(double value, WeightUnit fromUnit, WeightUnit toUnit) {
-        QuantityWeight original = new QuantityWeight(value, fromUnit);
-        QuantityWeight converted = original.convertTo(toUnit);
+        Quantity<WeightUnit> original = new Quantity<>(value, fromUnit);
+        Quantity<WeightUnit> converted = original.convertTo(toUnit);
         System.out.printf("Input: %s.convertTo(%s) → Output: %s%n", original, toUnit, converted);
     }
 
     public static void demonstrateWeightAddition(double val1, WeightUnit unit1, double val2, WeightUnit unit2) {
-        QuantityWeight q1 = new QuantityWeight(val1, unit1);
-        QuantityWeight q2 = new QuantityWeight(val2, unit2);
-        QuantityWeight sum = q1.add(q2);
+        Quantity<WeightUnit> q1 = new Quantity<>(val1, unit1);
+        Quantity<WeightUnit> q2 = new Quantity<>(val2, unit2);
+        Quantity<WeightUnit> sum = q1.add(q2);
         System.out.printf("Input: add(%s, %s)\nOutput: %s\n\n", q1, q2, sum);
     }
 
     public static void demonstrateWeightAddition(double val1, WeightUnit unit1, double val2, WeightUnit unit2, WeightUnit targetUnit) {
-        QuantityWeight q1 = new QuantityWeight(val1, unit1);
-        QuantityWeight q2 = new QuantityWeight(val2, unit2);
-        QuantityWeight sum = QuantityWeight.add(q1, q2, targetUnit);
+        Quantity<WeightUnit> q1 = new Quantity<>(val1, unit1);
+        Quantity<WeightUnit> q2 = new Quantity<>(val2, unit2);
+        Quantity<WeightUnit> sum = Quantity.add(q1, q2, targetUnit);
         System.out.printf("Input: add(%s, %s, %s)\nOutput: %s\n\n", q1, q2, targetUnit, sum);
     }
 }

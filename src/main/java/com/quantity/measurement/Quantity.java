@@ -3,29 +3,26 @@ package com.quantity.measurement;
 import java.util.Objects;
 
 /**
- * Represents an immutable length measurement with a specific unit.
- * Supports equality comparison across units, explicit unit-to-unit conversion,
- * and addition of two lengths with optional target-unit specification.
+ * Represents an immutable measurement with a specific unit.
+ * Supports equality comparison, unit conversion, and addition.
  *
- * <p><strong>UC8 refactoring:</strong> All unit-specific conversion logic is
- * delegated to {@link LengthUnit}. This class focuses solely on value
- * comparison and arithmetic, upholding the Single Responsibility Principle.</p>
+ * <p>All unit-specific conversion logic is delegated to the generic unit U,
+ * which must implement {@link IMeasurable}.</p>
  *
- * <p>Instances are immutable: conversions and additions return new instances
- * rather than modifying the current one, ensuring value-object semantics.</p>
+ * @param <U> The type of the measurement unit (e.g. LengthUnit, WeightUnit)
  */
-public class QuantityLength {
+public class Quantity<U extends IMeasurable> {
     private final double value;
-    private final LengthUnit unit;
+    private final U unit;
 
     /**
-     * Constructs a QuantityLength with the given value and unit.
+     * Constructs a Quantity with the given value and unit.
      *
      * @param value the numeric measurement value
      * @param unit  the unit of measurement (must not be null)
      * @throws IllegalArgumentException if unit is null, or value is NaN / infinite
      */
-    public QuantityLength(double value, LengthUnit unit) {
+    public Quantity(double value, U unit) {
         if (unit == null) {
             throw new IllegalArgumentException("Unit cannot be null");
         }
@@ -37,24 +34,23 @@ public class QuantityLength {
     }
 
     // ─────────────────────────────────────────────
-    // Public API: conversion (delegates to LengthUnit)
+    // Public API: conversion (delegates to U)
     // ─────────────────────────────────────────────
 
     /**
-     * Instance method: converts this length to a new QuantityLength expressed in the target unit.
-     * Returns a new immutable instance; does not modify the current object.
+     * Converts this quantity to a new Quantity expressed in the target unit.
      *
      * @param targetUnit the desired target unit (must not be null)
-     * @return a new QuantityLength in the target unit
+     * @return a new Quantity in the target unit
      * @throws IllegalArgumentException if targetUnit is null
      */
-    public QuantityLength convertTo(LengthUnit targetUnit) {
+    public Quantity<U> convertTo(U targetUnit) {
         if (targetUnit == null) {
             throw new IllegalArgumentException("Target unit cannot be null");
         }
         double baseValue = this.unit.convertToBaseUnit(this.value);
         double convertedValue = targetUnit.convertFromBaseUnit(baseValue);
-        return new QuantityLength(convertedValue, targetUnit);
+        return new Quantity<>(convertedValue, targetUnit);
     }
 
     /**
@@ -63,10 +59,11 @@ public class QuantityLength {
      * @param value      the numeric measurement to convert
      * @param sourceUnit the unit of the input value (must not be null)
      * @param targetUnit the desired output unit (must not be null)
+     * @param <U>        the unit type
      * @return the converted value in targetUnit
-     * @throws IllegalArgumentException if any argument is invalid (null unit, NaN, infinite)
+     * @throws IllegalArgumentException if any argument is invalid
      */
-    public static double convert(double value, LengthUnit sourceUnit, LengthUnit targetUnit) {
+    public static <U extends IMeasurable> double convert(double value, U sourceUnit, U targetUnit) {
         if (sourceUnit == null || targetUnit == null) {
             throw new IllegalArgumentException("Source and target units cannot be null");
         }
@@ -78,55 +75,45 @@ public class QuantityLength {
     }
 
     // ─────────────────────────────────────────────
-    // Public API: Addition (delegates to LengthUnit)
+    // Public API: Addition
     // ─────────────────────────────────────────────
 
     /**
-     * Instance method to add another length.
-     * The result is returned as a new QuantityLength in this instance's unit.
+     * Adds another quantity to this one.
+     * The result is returned as a new Quantity in this instance's unit.
      *
-     * @param other the length to add (must not be null)
-     * @return a new QuantityLength representing the sum
+     * @param other the quantity to add (must not be null)
+     * @return a new Quantity representing the sum
      * @throws IllegalArgumentException if the other quantity is null
      */
-    public QuantityLength add(QuantityLength other) {
+    public Quantity<U> add(Quantity<U> other) {
         if (other == null) {
             throw new IllegalArgumentException("Cannot add a null quantity");
         }
+        // Implicitly prevented cross-category additions by strong typing <U>
         double sumInBase = this.unit.convertToBaseUnit(this.value)
                          + other.unit.convertToBaseUnit(other.value);
         double sumInTargetUnit = this.unit.convertFromBaseUnit(sumInBase);
-        return new QuantityLength(sumInTargetUnit, this.unit);
+        return new Quantity<>(sumInTargetUnit, this.unit);
     }
 
     /**
-     * Static method to add two lengths, returning the result in the specified target unit.
-     *
-     * @param q1 the first length to add
-     * @param q2 the second length to add
-     * @param targetUnit the desired unit for the result
-     * @return a new QuantityLength representing the sum
-     * @throws IllegalArgumentException if any argument is null
+     * Adds two quantities, returning the result in the specified target unit.
      */
-    public static QuantityLength add(QuantityLength q1, QuantityLength q2, LengthUnit targetUnit) {
+    public static <U extends IMeasurable> Quantity<U> add(Quantity<U> q1, Quantity<U> q2, U targetUnit) {
         if (q1 == null || q2 == null || targetUnit == null) {
             throw new IllegalArgumentException("Arguments cannot be null");
         }
         double sumInBase = q1.unit.convertToBaseUnit(q1.value)
                          + q2.unit.convertToBaseUnit(q2.value);
         double sumInTargetUnit = targetUnit.convertFromBaseUnit(sumInBase);
-        return new QuantityLength(sumInTargetUnit, targetUnit);
+        return new Quantity<>(sumInTargetUnit, targetUnit);
     }
 
     /**
-     * Static method to add two lengths, returning the result in the unit of the first operand.
-     *
-     * @param q1 the first length to add (also determines the target unit)
-     * @param q2 the second length to add
-     * @return a new QuantityLength representing the sum
-     * @throws IllegalArgumentException if any argument is null
+     * Adds two quantities, returning the result in the unit of the first operand.
      */
-    public static QuantityLength add(QuantityLength q1, QuantityLength q2) {
+    public static <U extends IMeasurable> Quantity<U> add(Quantity<U> q1, Quantity<U> q2) {
         if (q1 == null || q2 == null) {
             throw new IllegalArgumentException("Arguments cannot be null");
         }
@@ -134,19 +121,11 @@ public class QuantityLength {
     }
 
     /**
-     * Static method to add two raw measurements and return the result in a target unit.
-     *
-     * @param val1 the numeric value of the first measurement
-     * @param unit1 the unit of the first measurement
-     * @param val2 the numeric value of the second measurement
-     * @param unit2 the unit of the second measurement
-     * @param targetUnit the desired unit for the result
-     * @return a new QuantityLength representing the sum
-     * @throws IllegalArgumentException if any argument is invalid
+     * Adds two raw measurements and returns the result in a target unit.
      */
-    public static QuantityLength add(double val1, LengthUnit unit1, double val2, LengthUnit unit2, LengthUnit targetUnit) {
-        QuantityLength q1 = new QuantityLength(val1, unit1);
-        QuantityLength q2 = new QuantityLength(val2, unit2);
+    public static <U extends IMeasurable> Quantity<U> add(double val1, U unit1, double val2, U unit2, U targetUnit) {
+        Quantity<U> q1 = new Quantity<>(val1, unit1);
+        Quantity<U> q2 = new Quantity<>(val2, unit2);
         return add(q1, q2, targetUnit);
     }
 
@@ -157,30 +136,36 @@ public class QuantityLength {
     private static final double EPSILON = 1e-6;
 
     /**
-     * Two QuantityLength objects are equal if they represent the same physical length
-     * when both are converted to the common base unit (FEET), within an epsilon.
+     * Two Quantity objects are equal if they represent the same physical amount
+     * when both are converted to the common base unit, within an epsilon,
+     * AND they belong to the same measurement category (i.e., same unit class).
      */
     @Override
     public boolean equals(Object obj) {
         if (this == obj) return true;
         if (obj == null || getClass() != obj.getClass()) return false;
-        QuantityLength that = (QuantityLength) obj;
+        
+        Quantity<?> that = (Quantity<?>) obj;
+        
+        // Prevent cross-category matches (e.g. Length vs Weight)
+        if (this.unit.getClass() != that.unit.getClass()) {
+            return false;
+        }
+
         double thisBase = this.unit.convertToBaseUnit(this.value);
-        double thatBase = that.unit.convertToBaseUnit(that.value);
+        double thatBase = ((IMeasurable) that.unit).convertToBaseUnit(that.value);
+        
         return Math.abs(thisBase - thatBase) <= EPSILON;
     }
 
     @Override
     public int hashCode() {
         double base = this.unit.convertToBaseUnit(this.value);
-        return Objects.hash(Math.round(base / EPSILON));
+        return Objects.hash(this.unit.getClass(), Math.round(base / EPSILON));
     }
 
-    /**
-     * Human-readable representation, e.g. "QuantityLength{1.0 FEET}".
-     */
     @Override
     public String toString() {
-        return "QuantityLength{" + value + " " + unit + "}";
+        return "Quantity{" + value + " " + unit + "}";
     }
 }
