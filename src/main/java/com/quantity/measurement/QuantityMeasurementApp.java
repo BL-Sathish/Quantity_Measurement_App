@@ -26,6 +26,17 @@ public class QuantityMeasurementApp {
         System.out.println("\n=== Equality Demo ===");
         demonstrateLengthComparison(1.0, LengthUnit.FEET, 12.0, LengthUnit.INCH);
         demonstrateLengthComparison(1.0, LengthUnit.YARD, 3.0, LengthUnit.FEET);
+
+        // UC6: Addition demonstration
+        System.out.println("\n=== UC6: Addition Demo ===");
+        demonstrateAddition(1.0, LengthUnit.FEET, 2.0, LengthUnit.FEET);
+        demonstrateAddition(1.0, LengthUnit.FEET, 12.0, LengthUnit.INCH);
+        demonstrateAddition(12.0, LengthUnit.INCH, 1.0, LengthUnit.FEET);
+        demonstrateAddition(1.0, LengthUnit.YARD, 3.0, LengthUnit.FEET);
+        demonstrateAddition(36.0, LengthUnit.INCH, 1.0, LengthUnit.YARD);
+        demonstrateAddition(2.54, LengthUnit.CENTIMETER, 1.0, LengthUnit.INCH);
+        demonstrateAddition(5.0, LengthUnit.FEET, 0.0, LengthUnit.INCH);
+        demonstrateAddition(5.0, LengthUnit.FEET, -2.0, LengthUnit.FEET);
     }
 
     // ─────────────────────────────────────────────
@@ -70,5 +81,19 @@ public class QuantityMeasurementApp {
         QuantityLength a = new QuantityLength(val1, unit1);
         QuantityLength b = new QuantityLength(val2, unit2);
         demonstrateLengthEquality(a, b);
+    }
+
+    // ─────────────────────────────────────────────
+    // Addition API (UC6)
+    // ─────────────────────────────────────────────
+
+    /**
+     * Demonstrates addition of two lengths and prints the result.
+     */
+    public static void demonstrateAddition(double val1, LengthUnit unit1, double val2, LengthUnit unit2) {
+        QuantityLength q1 = new QuantityLength(val1, unit1);
+        QuantityLength q2 = new QuantityLength(val2, unit2);
+        QuantityLength sum = q1.add(q2);
+        System.out.printf("Input: add(%s, %s)\nOutput: %s\n\n", q1, q2, sum);
     }
 }

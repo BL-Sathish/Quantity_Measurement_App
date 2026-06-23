@@ -281,4 +281,105 @@ class QuantityMeasurementAppTest {
         assertTrue(str.contains("1.0"), "toString should contain the value");
         assertTrue(str.contains("FEET"), "toString should contain the unit");
     }
+
+    // ─────────────────────────────────────────────
+    // UC6: Addition of Two Length Units
+    // ─────────────────────────────────────────────
+
+    @Test
+    void testAddition_SameUnit_FeetPlusFeet() {
+        QuantityLength q1 = new QuantityLength(1.0, LengthUnit.FEET);
+        QuantityLength q2 = new QuantityLength(2.0, LengthUnit.FEET);
+        QuantityLength result = q1.add(q2);
+        assertTrue(result.equals(new QuantityLength(3.0, LengthUnit.FEET)));
+    }
+
+    @Test
+    void testAddition_SameUnit_InchPlusInch() {
+        QuantityLength q1 = new QuantityLength(6.0, LengthUnit.INCH);
+        QuantityLength q2 = new QuantityLength(6.0, LengthUnit.INCH);
+        QuantityLength result = q1.add(q2);
+        assertTrue(result.equals(new QuantityLength(12.0, LengthUnit.INCH)));
+    }
+
+    @Test
+    void testAddition_CrossUnit_FeetPlusInches() {
+        QuantityLength q1 = new QuantityLength(1.0, LengthUnit.FEET);
+        QuantityLength q2 = new QuantityLength(12.0, LengthUnit.INCH);
+        QuantityLength result = q1.add(q2);
+        assertTrue(result.equals(new QuantityLength(2.0, LengthUnit.FEET)));
+    }
+
+    @Test
+    void testAddition_CrossUnit_InchPlusFeet() {
+        QuantityLength q1 = new QuantityLength(12.0, LengthUnit.INCH);
+        QuantityLength q2 = new QuantityLength(1.0, LengthUnit.FEET);
+        QuantityLength result = q1.add(q2);
+        assertTrue(result.equals(new QuantityLength(24.0, LengthUnit.INCH)));
+    }
+
+    @Test
+    void testAddition_CrossUnit_YardPlusFeet() {
+        QuantityLength q1 = new QuantityLength(1.0, LengthUnit.YARD);
+        QuantityLength q2 = new QuantityLength(3.0, LengthUnit.FEET);
+        QuantityLength result = q1.add(q2);
+        assertTrue(result.equals(new QuantityLength(2.0, LengthUnit.YARD)));
+    }
+
+    @Test
+    void testAddition_CrossUnit_CentimeterPlusInch() {
+        QuantityLength q1 = new QuantityLength(2.54, LengthUnit.CENTIMETER);
+        QuantityLength q2 = new QuantityLength(1.0, LengthUnit.INCH);
+        QuantityLength result = q1.add(q2);
+        // 1 inch = 2.54 cm -> 2.54 cm + 2.54 cm = 5.08 cm
+        assertTrue(result.equals(new QuantityLength(5.08, LengthUnit.CENTIMETER)));
+    }
+
+    @Test
+    void testAddition_Commutativity() {
+        QuantityLength q1 = new QuantityLength(1.0, LengthUnit.FEET);
+        QuantityLength q2 = new QuantityLength(12.0, LengthUnit.INCH);
+        QuantityLength result1 = QuantityLength.add(q1, q2, LengthUnit.INCH);
+        QuantityLength result2 = QuantityLength.add(q2, q1, LengthUnit.INCH);
+        assertTrue(result1.equals(result2));
+    }
+
+    @Test
+    void testAddition_WithZero() {
+        QuantityLength q1 = new QuantityLength(5.0, LengthUnit.FEET);
+        QuantityLength q2 = new QuantityLength(0.0, LengthUnit.INCH);
+        QuantityLength result = q1.add(q2);
+        assertTrue(result.equals(new QuantityLength(5.0, LengthUnit.FEET)));
+    }
+
+    @Test
+    void testAddition_NegativeValues() {
+        QuantityLength q1 = new QuantityLength(5.0, LengthUnit.FEET);
+        QuantityLength q2 = new QuantityLength(-2.0, LengthUnit.FEET);
+        QuantityLength result = q1.add(q2);
+        assertTrue(result.equals(new QuantityLength(3.0, LengthUnit.FEET)));
+    }
+
+    @Test
+    void testAddition_NullSecondOperand() {
+        QuantityLength q1 = new QuantityLength(1.0, LengthUnit.FEET);
+        assertThrows(IllegalArgumentException.class, () -> q1.add(null));
+    }
+
+    @Test
+    void testAddition_LargeValues() {
+        QuantityLength q1 = new QuantityLength(1e6, LengthUnit.FEET);
+        QuantityLength q2 = new QuantityLength(1e6, LengthUnit.FEET);
+        QuantityLength result = q1.add(q2);
+        assertTrue(result.equals(new QuantityLength(2e6, LengthUnit.FEET)));
+    }
+
+    @Test
+    void testAddition_SmallValues() {
+        QuantityLength q1 = new QuantityLength(0.001, LengthUnit.FEET);
+        QuantityLength q2 = new QuantityLength(0.002, LengthUnit.FEET);
+        QuantityLength result = q1.add(q2);
+        assertTrue(result.equals(new QuantityLength(0.003, LengthUnit.FEET)));
+    }
+
 }
