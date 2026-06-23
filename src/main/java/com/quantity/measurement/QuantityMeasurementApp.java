@@ -24,43 +24,50 @@ public class QuantityMeasurementApp {
         demonstrateAddition(1.0, LengthUnit.FEET, 12.0, LengthUnit.INCH, LengthUnit.FEET);
         demonstrateAddition(1.0, LengthUnit.FEET, 12.0, LengthUnit.INCH, LengthUnit.INCH);
         demonstrateAddition(1.0, LengthUnit.FEET, 12.0, LengthUnit.INCH, LengthUnit.YARD);
-        demonstrateAddition(1.0, LengthUnit.YARD, 3.0, LengthUnit.FEET, LengthUnit.YARD);
-        demonstrateAddition(36.0, LengthUnit.INCH, 1.0, LengthUnit.YARD, LengthUnit.FEET);
-        demonstrateAddition(2.54, LengthUnit.CENTIMETER, 1.0, LengthUnit.INCH, LengthUnit.CENTIMETER);
-        demonstrateAddition(5.0, LengthUnit.FEET, 0.0, LengthUnit.INCH, LengthUnit.YARD);
-        demonstrateAddition(5.0, LengthUnit.FEET, -2.0, LengthUnit.FEET, LengthUnit.INCH);
 
-        // UC8: Refactored design — LengthUnit conversion responsibility demo
+        // UC8: Refactored LengthUnit conversion demo
         System.out.println("\n=== UC8: Standalone LengthUnit Conversion Demo ===");
         demonstrateUnitConversion(LengthUnit.FEET, 12.0);
         demonstrateUnitConversion(LengthUnit.INCH, 12.0);
         demonstrateUnitConversion(LengthUnit.YARD, 1.0);
         demonstrateUnitConversion(LengthUnit.CENTIMETER, 30.48);
 
-        System.out.println("\n--- Refactored API backward compatibility ---");
-        demonstrateLengthConversion(1.0, LengthUnit.FEET, LengthUnit.INCH);
-        demonstrateLengthConversion(new QuantityLength(1.0, LengthUnit.FEET), LengthUnit.INCH);
-        demonstrateLengthConversion(1.0, LengthUnit.YARD, LengthUnit.FEET);
+        // ─────────────────────────────────────────────
+        // UC9: Weight Measurement Demonstrations
+        // ─────────────────────────────────────────────
 
-        System.out.println("\n--- Equality via refactored delegation ---");
-        demonstrateLengthEquality(
-                new QuantityLength(36.0, LengthUnit.INCH),
-                new QuantityLength(1.0, LengthUnit.YARD));
-        demonstrateLengthEquality(
-                new QuantityLength(1.0, LengthUnit.FEET),
-                new QuantityLength(12.0, LengthUnit.INCH));
+        System.out.println("\n=== UC9: Weight Equality Demo ===");
+        demonstrateWeightEquality(1.0, WeightUnit.KILOGRAM, 1.0, WeightUnit.KILOGRAM);
+        demonstrateWeightEquality(1.0, WeightUnit.KILOGRAM, 1000.0, WeightUnit.GRAM);
+        demonstrateWeightEquality(2.0, WeightUnit.POUND, 2.0, WeightUnit.POUND);
+        demonstrateWeightEquality(1.0, WeightUnit.KILOGRAM, 2.20462, WeightUnit.POUND);
+        demonstrateWeightEquality(500.0, WeightUnit.GRAM, 0.5, WeightUnit.KILOGRAM);
+        demonstrateWeightEquality(1.0, WeightUnit.POUND, 453.592, WeightUnit.GRAM);
 
-        System.out.println("\n--- Addition via refactored delegation ---");
-        demonstrateAddition(1.0, LengthUnit.FEET, 12.0, LengthUnit.INCH, LengthUnit.FEET);
-        demonstrateAddition(1.0, LengthUnit.YARD, 3.0, LengthUnit.FEET, LengthUnit.YARD);
+        System.out.println("\n=== UC9: Weight Conversion Demo ===");
+        demonstrateWeightConversion(1.0, WeightUnit.KILOGRAM, WeightUnit.GRAM);
+        demonstrateWeightConversion(2.0, WeightUnit.POUND, WeightUnit.KILOGRAM);
+        demonstrateWeightConversion(500.0, WeightUnit.GRAM, WeightUnit.POUND);
+        demonstrateWeightConversion(0.0, WeightUnit.KILOGRAM, WeightUnit.GRAM);
+
+        System.out.println("\n=== UC9: Weight Addition Demo ===");
+        demonstrateWeightAddition(1.0, WeightUnit.KILOGRAM, 2.0, WeightUnit.KILOGRAM);
+        demonstrateWeightAddition(1.0, WeightUnit.KILOGRAM, 1000.0, WeightUnit.GRAM);
+        demonstrateWeightAddition(500.0, WeightUnit.GRAM, 0.5, WeightUnit.KILOGRAM);
+
+        System.out.println("\n=== UC9: Weight Addition with Target Unit Demo ===");
+        demonstrateWeightAddition(1.0, WeightUnit.KILOGRAM, 1000.0, WeightUnit.GRAM, WeightUnit.GRAM);
+        demonstrateWeightAddition(1.0, WeightUnit.POUND, 453.592, WeightUnit.GRAM, WeightUnit.POUND);
+        demonstrateWeightAddition(2.0, WeightUnit.KILOGRAM, 4.0, WeightUnit.POUND, WeightUnit.KILOGRAM);
+
+        System.out.println("\n=== UC9: Category Incompatibility Demo ===");
+        System.out.printf("Quantity(1.0, KILOGRAM).equals(Quantity(1.0, FEET)) → %b%n",
+                new QuantityWeight(1.0, WeightUnit.KILOGRAM).equals(new QuantityLength(1.0, LengthUnit.FEET)));
     }
 
     // ─────────────────────────────────────────────
     // UC8: LengthUnit direct conversion demo
     // ─────────────────────────────────────────────
-    /**
-     * Demonstrates LengthUnit's own convertToBaseUnit and convertFromBaseUnit methods.
-     */
     public static void demonstrateUnitConversion(LengthUnit unit, double value) {
         double toBase   = unit.convertToBaseUnit(value);
         double fromBase = unit.convertFromBaseUnit(toBase);
@@ -69,31 +76,18 @@ public class QuantityMeasurementApp {
     }
 
     // ─────────────────────────────────────────────
-    // Overloaded demonstrateLengthConversion
+    // Length: Conversion, Equality, Addition
     // ─────────────────────────────────────────────
-    /**
-     * Method 1: Takes raw value and two units — converts and prints result.
-     */
     public static void demonstrateLengthConversion(double value, LengthUnit fromUnit, LengthUnit toUnit) {
         double result = QuantityLength.convert(value, fromUnit, toUnit);
         System.out.printf("Input: convert(%.4f, %s, %s) → Output: %.4f%n", value, fromUnit, toUnit, result);
     }
 
-    /**
-     * Method 2: Takes an existing QuantityLength instance and a target unit.
-     * Demonstrates method overloading — same name, different parameter list.
-     */
     public static void demonstrateLengthConversion(QuantityLength length, LengthUnit toUnit) {
         QuantityLength converted = length.convertTo(toUnit);
         System.out.printf("Input: %s.convertTo(%s) → Output: %s%n", length, toUnit, converted);
     }
 
-    // ─────────────────────────────────────────────
-    // Addition API (UC6 & UC7)
-    // ─────────────────────────────────────────────
-    /**
-     * Demonstrates addition of two lengths using the default target (first operand's unit).
-     */
     public static void demonstrateAddition(double val1, LengthUnit unit1, double val2, LengthUnit unit2) {
         QuantityLength q1 = new QuantityLength(val1, unit1);
         QuantityLength q2 = new QuantityLength(val2, unit2);
@@ -101,9 +95,6 @@ public class QuantityMeasurementApp {
         System.out.printf("Input: add(%s, %s)\nOutput: %s\n\n", q1, q2, sum);
     }
 
-    /**
-     * Demonstrates addition of two lengths with an explicit target unit.
-     */
     public static void demonstrateAddition(double val1, LengthUnit unit1, double val2, LengthUnit unit2, LengthUnit targetUnit) {
         QuantityLength q1 = new QuantityLength(val1, unit1);
         QuantityLength q2 = new QuantityLength(val2, unit2);
@@ -111,23 +102,42 @@ public class QuantityMeasurementApp {
         System.out.printf("Input: add(%s, %s, %s)\nOutput: %s\n\n", q1, q2, targetUnit, sum);
     }
 
-    // ─────────────────────────────────────────────
-    // Equality & comparison API
-    // ─────────────────────────────────────────────
-    /**
-     * Checks and prints equality of two QuantityLength objects.
-     */
     public static void demonstrateLengthEquality(QuantityLength a, QuantityLength b) {
         System.out.printf("Equality: %s == %s → %b%n", a, b, a.equals(b));
     }
 
-    /**
-     * Creates two QuantityLength instances from raw values and delegates to demonstrateLengthEquality.
-     */
-    public static void demonstrateLengthComparison(double val1, LengthUnit unit1,
-                                                   double val2, LengthUnit unit2) {
+    public static void demonstrateLengthComparison(double val1, LengthUnit unit1, double val2, LengthUnit unit2) {
         QuantityLength a = new QuantityLength(val1, unit1);
         QuantityLength b = new QuantityLength(val2, unit2);
         demonstrateLengthEquality(a, b);
+    }
+
+    // ─────────────────────────────────────────────
+    // UC9: Weight demos
+    // ─────────────────────────────────────────────
+    public static void demonstrateWeightEquality(double val1, WeightUnit unit1, double val2, WeightUnit unit2) {
+        QuantityWeight a = new QuantityWeight(val1, unit1);
+        QuantityWeight b = new QuantityWeight(val2, unit2);
+        System.out.printf("Equality: %s == %s → %b%n", a, b, a.equals(b));
+    }
+
+    public static void demonstrateWeightConversion(double value, WeightUnit fromUnit, WeightUnit toUnit) {
+        QuantityWeight original = new QuantityWeight(value, fromUnit);
+        QuantityWeight converted = original.convertTo(toUnit);
+        System.out.printf("Input: %s.convertTo(%s) → Output: %s%n", original, toUnit, converted);
+    }
+
+    public static void demonstrateWeightAddition(double val1, WeightUnit unit1, double val2, WeightUnit unit2) {
+        QuantityWeight q1 = new QuantityWeight(val1, unit1);
+        QuantityWeight q2 = new QuantityWeight(val2, unit2);
+        QuantityWeight sum = q1.add(q2);
+        System.out.printf("Input: add(%s, %s)\nOutput: %s\n\n", q1, q2, sum);
+    }
+
+    public static void demonstrateWeightAddition(double val1, WeightUnit unit1, double val2, WeightUnit unit2, WeightUnit targetUnit) {
+        QuantityWeight q1 = new QuantityWeight(val1, unit1);
+        QuantityWeight q2 = new QuantityWeight(val2, unit2);
+        QuantityWeight sum = QuantityWeight.add(q1, q2, targetUnit);
+        System.out.printf("Input: add(%s, %s, %s)\nOutput: %s\n\n", q1, q2, targetUnit, sum);
     }
 }
