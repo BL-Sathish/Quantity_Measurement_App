@@ -63,6 +63,43 @@ public class QuantityMeasurementApp {
         System.out.println("\n=== UC9: Category Incompatibility Demo ===");
         System.out.printf("Quantity(1.0, KILOGRAM).equals(Quantity(1.0, FEET)) → %b%n",
                 new Quantity<>(1.0, WeightUnit.KILOGRAM).equals(new Quantity<>(1.0, LengthUnit.FEET)));
+
+        // ─────────────────────────────────────────────
+        // UC11: Volume Measurement Demonstrations
+        // ─────────────────────────────────────────────
+
+        System.out.println("\n=== UC11: Volume Equality Demo ===");
+        demonstrateVolumeEquality(1.0, VolumeUnit.LITRE, 1.0, VolumeUnit.LITRE);
+        demonstrateVolumeEquality(1.0, VolumeUnit.LITRE, 1000.0, VolumeUnit.MILLILITRE);
+        demonstrateVolumeEquality(1.0, VolumeUnit.GALLON, 1.0, VolumeUnit.GALLON);
+        demonstrateVolumeEquality(1.0, VolumeUnit.LITRE, 0.264172, VolumeUnit.GALLON);
+        demonstrateVolumeEquality(500.0, VolumeUnit.MILLILITRE, 0.5, VolumeUnit.LITRE);
+        demonstrateVolumeEquality(3.78541, VolumeUnit.LITRE, 1.0, VolumeUnit.GALLON);
+
+        System.out.println("\n=== UC11: Volume Conversion Demo ===");
+        demonstrateVolumeConversion(1.0, VolumeUnit.LITRE, VolumeUnit.MILLILITRE);
+        demonstrateVolumeConversion(2.0, VolumeUnit.GALLON, VolumeUnit.LITRE);
+        demonstrateVolumeConversion(500.0, VolumeUnit.MILLILITRE, VolumeUnit.GALLON);
+        demonstrateVolumeConversion(0.0, VolumeUnit.LITRE, VolumeUnit.MILLILITRE);
+        demonstrateVolumeConversion(1.0, VolumeUnit.LITRE, VolumeUnit.LITRE);
+
+        System.out.println("\n=== UC11: Volume Addition Demo ===");
+        demonstrateVolumeAddition(1.0, VolumeUnit.LITRE, 2.0, VolumeUnit.LITRE);
+        demonstrateVolumeAddition(1.0, VolumeUnit.LITRE, 1000.0, VolumeUnit.MILLILITRE);
+        demonstrateVolumeAddition(500.0, VolumeUnit.MILLILITRE, 0.5, VolumeUnit.LITRE);
+        demonstrateVolumeAddition(2.0, VolumeUnit.GALLON, 3.78541, VolumeUnit.LITRE);
+
+        System.out.println("\n=== UC11: Volume Addition with Target Unit Demo ===");
+        demonstrateVolumeAddition(1.0, VolumeUnit.LITRE, 1000.0, VolumeUnit.MILLILITRE, VolumeUnit.MILLILITRE);
+        demonstrateVolumeAddition(1.0, VolumeUnit.GALLON, 3.78541, VolumeUnit.LITRE, VolumeUnit.GALLON);
+        demonstrateVolumeAddition(500.0, VolumeUnit.MILLILITRE, 1.0, VolumeUnit.LITRE, VolumeUnit.GALLON);
+        demonstrateVolumeAddition(2.0, VolumeUnit.LITRE, 4.0, VolumeUnit.GALLON, VolumeUnit.LITRE);
+
+        System.out.println("\n=== UC11: Category Incompatibility Demo ===");
+        System.out.printf("Quantity(1.0, LITRE).equals(Quantity(1.0, FEET)) → %b%n",
+                new Quantity<>(1.0, VolumeUnit.LITRE).equals(new Quantity<>(1.0, LengthUnit.FEET)));
+        System.out.printf("Quantity(1.0, LITRE).equals(Quantity(1.0, KILOGRAM)) → %b%n",
+                new Quantity<>(1.0, VolumeUnit.LITRE).equals(new Quantity<>(1.0, WeightUnit.KILOGRAM)));
     }
 
     // ─────────────────────────────────────────────
@@ -138,6 +175,35 @@ public class QuantityMeasurementApp {
         Quantity<WeightUnit> q1 = new Quantity<>(val1, unit1);
         Quantity<WeightUnit> q2 = new Quantity<>(val2, unit2);
         Quantity<WeightUnit> sum = Quantity.add(q1, q2, targetUnit);
+        System.out.printf("Input: add(%s, %s, %s)\nOutput: %s\n\n", q1, q2, targetUnit, sum);
+    }
+
+    // ─────────────────────────────────────────────
+    // UC11: Volume demos
+    // ─────────────────────────────────────────────
+    public static void demonstrateVolumeEquality(double val1, VolumeUnit unit1, double val2, VolumeUnit unit2) {
+        Quantity<VolumeUnit> a = new Quantity<>(val1, unit1);
+        Quantity<VolumeUnit> b = new Quantity<>(val2, unit2);
+        System.out.printf("Equality: %s == %s → %b%n", a, b, a.equals(b));
+    }
+
+    public static void demonstrateVolumeConversion(double value, VolumeUnit fromUnit, VolumeUnit toUnit) {
+        Quantity<VolumeUnit> original = new Quantity<>(value, fromUnit);
+        Quantity<VolumeUnit> converted = original.convertTo(toUnit);
+        System.out.printf("Input: %s.convertTo(%s) → Output: %s%n", original, toUnit, converted);
+    }
+
+    public static void demonstrateVolumeAddition(double val1, VolumeUnit unit1, double val2, VolumeUnit unit2) {
+        Quantity<VolumeUnit> q1 = new Quantity<>(val1, unit1);
+        Quantity<VolumeUnit> q2 = new Quantity<>(val2, unit2);
+        Quantity<VolumeUnit> sum = q1.add(q2);
+        System.out.printf("Input: add(%s, %s)\nOutput: %s\n\n", q1, q2, sum);
+    }
+
+    public static void demonstrateVolumeAddition(double val1, VolumeUnit unit1, double val2, VolumeUnit unit2, VolumeUnit targetUnit) {
+        Quantity<VolumeUnit> q1 = new Quantity<>(val1, unit1);
+        Quantity<VolumeUnit> q2 = new Quantity<>(val2, unit2);
+        Quantity<VolumeUnit> sum = Quantity.add(q1, q2, targetUnit);
         System.out.printf("Input: add(%s, %s, %s)\nOutput: %s\n\n", q1, q2, targetUnit, sum);
     }
 }
