@@ -63,6 +63,35 @@ public class QuantityMeasurementApp {
         System.out.println("\n=== UC9: Category Incompatibility Demo ===");
         System.out.printf("Quantity(1.0, KILOGRAM).equals(Quantity(1.0, FEET)) → %b%n",
                 new Quantity<>(1.0, WeightUnit.KILOGRAM).equals(new Quantity<>(1.0, LengthUnit.FEET)));
+
+        // ─────────────────────────────────────────────
+        // UC12: Subtraction and Division Demonstrations
+        // ─────────────────────────────────────────────
+
+        System.out.println("\n=== UC12: Subtraction with Implicit Target Unit ===");
+        demonstrateSubtraction(10.0, LengthUnit.FEET, 6.0, LengthUnit.INCH);
+        demonstrateSubtraction(10.0, WeightUnit.KILOGRAM, 5000.0, WeightUnit.GRAM);
+
+        System.out.println("\n=== UC12: Subtraction with Explicit Target Unit ===");
+        demonstrateSubtraction(10.0, LengthUnit.FEET, 6.0, LengthUnit.INCH, LengthUnit.INCH);
+        demonstrateSubtraction(10.0, WeightUnit.KILOGRAM, 5000.0, WeightUnit.GRAM, WeightUnit.GRAM);
+
+        System.out.println("\n=== UC12: Subtraction Resulting in Negative Values ===");
+        demonstrateSubtraction(5.0, LengthUnit.FEET, 10.0, LengthUnit.FEET);
+        demonstrateSubtraction(2.0, WeightUnit.KILOGRAM, 5.0, WeightUnit.KILOGRAM);
+
+        System.out.println("\n=== UC12: Subtraction Resulting in Zero ===");
+        demonstrateSubtraction(10.0, LengthUnit.FEET, 120.0, LengthUnit.INCH);
+
+        System.out.println("\n=== UC12: Division Operations ===");
+        demonstrateDivision(10.0, LengthUnit.FEET, 2.0, LengthUnit.FEET);
+        demonstrateDivision(10.0, LengthUnit.FEET, 5.0, LengthUnit.FEET);
+        demonstrateDivision(24.0, LengthUnit.INCH, 2.0, LengthUnit.FEET);
+        demonstrateDivision(10.0, WeightUnit.KILOGRAM, 5.0, WeightUnit.KILOGRAM);
+
+        System.out.println("\n=== UC12: Division with Different Units (Same Category) ===");
+        demonstrateDivision(12.0, LengthUnit.INCH, 1.0, LengthUnit.FEET);
+        demonstrateDivision(2000.0, WeightUnit.GRAM, 1.0, WeightUnit.KILOGRAM);
     }
 
     // ─────────────────────────────────────────────
@@ -140,4 +169,43 @@ public class QuantityMeasurementApp {
         Quantity<WeightUnit> sum = Quantity.add(q1, q2, targetUnit);
         System.out.printf("Input: add(%s, %s, %s)\nOutput: %s\n\n", q1, q2, targetUnit, sum);
     }
+
+    // ─────────────────────────────────────────────
+    // UC12: Generic Subtraction demos
+    // ─────────────────────────────────────────────
+
+    /**
+     * Demonstrates subtraction with implicit target unit (first operand's unit).
+     */
+    public static <U extends IMeasurable> void demonstrateSubtraction(double val1, U unit1, double val2, U unit2) {
+        Quantity<U> q1 = new Quantity<>(val1, unit1);
+        Quantity<U> q2 = new Quantity<>(val2, unit2);
+        Quantity<U> diff = q1.subtract(q2);
+        System.out.printf("Input: %s.subtract(%s)%nOutput: %s%n%n", q1, q2, diff);
+    }
+
+    /**
+     * Demonstrates subtraction with explicit target unit specification.
+     */
+    public static <U extends IMeasurable> void demonstrateSubtraction(double val1, U unit1, double val2, U unit2, U targetUnit) {
+        Quantity<U> q1 = new Quantity<>(val1, unit1);
+        Quantity<U> q2 = new Quantity<>(val2, unit2);
+        Quantity<U> diff = q1.subtract(q2, targetUnit);
+        System.out.printf("Input: %s.subtract(%s, %s)%nOutput: %s%n%n", q1, q2, targetUnit, diff);
+    }
+
+    // ─────────────────────────────────────────────
+    // UC12: Generic Division demos
+    // ─────────────────────────────────────────────
+
+    /**
+     * Demonstrates division returning a dimensionless scalar ratio.
+     */
+    public static <U extends IMeasurable> void demonstrateDivision(double val1, U unit1, double val2, U unit2) {
+        Quantity<U> q1 = new Quantity<>(val1, unit1);
+        Quantity<U> q2 = new Quantity<>(val2, unit2);
+        double ratio = q1.divide(q2);
+        System.out.printf("Input: %s.divide(%s)%nOutput: %.6f%n%n", q1, q2, ratio);
+    }
 }
+
