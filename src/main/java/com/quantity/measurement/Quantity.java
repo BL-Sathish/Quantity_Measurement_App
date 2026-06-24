@@ -93,11 +93,9 @@ public class Quantity<U extends IMeasurable> {
         if (other == null) {
             throw new IllegalArgumentException("Cannot add a null quantity");
         }
-        // Implicitly prevented cross-category additions by strong typing <U>
-        double sumInBase = this.unit.convertToBaseUnit(this.value)
-                         + other.unit.convertToBaseUnit(other.value);
-        double sumInTargetUnit = this.unit.convertFromBaseUnit(sumInBase);
-        return new Quantity<>(sumInTargetUnit, this.unit);
+        double baseResult = performBaseArithmetic(other, ArithmeticOperation.ADD, null, false);
+        double resultInTarget = this.unit.convertFromBaseUnit(baseResult);
+        return new Quantity<>(resultInTarget, this.unit);
     }
 
     /**
@@ -107,10 +105,9 @@ public class Quantity<U extends IMeasurable> {
         if (q1 == null || q2 == null || targetUnit == null) {
             throw new IllegalArgumentException("Arguments cannot be null");
         }
-        double sumInBase = q1.unit.convertToBaseUnit(q1.value)
-                         + q2.unit.convertToBaseUnit(q2.value);
-        double sumInTargetUnit = targetUnit.convertFromBaseUnit(sumInBase);
-        return new Quantity<>(sumInTargetUnit, targetUnit);
+        double baseResult = q1.performBaseArithmetic(q2, ArithmeticOperation.ADD, targetUnit, true);
+        double resultInTarget = targetUnit.convertFromBaseUnit(baseResult);
+        return new Quantity<>(resultInTarget, targetUnit);
     }
 
     /**
@@ -156,10 +153,9 @@ public class Quantity<U extends IMeasurable> {
         if (other == null) {
             throw new IllegalArgumentException("Cannot subtract a null quantity");
         }
-        double diffInBase = this.unit.convertToBaseUnit(this.value)
-                          - other.unit.convertToBaseUnit(other.value);
-        double diffInTargetUnit = this.unit.convertFromBaseUnit(diffInBase);
-        double rounded = Math.round(diffInTargetUnit * 100.0) / 100.0;
+        double baseResult = performBaseArithmetic(other, ArithmeticOperation.SUBTRACT, null, false);
+        double resultInTarget = this.unit.convertFromBaseUnit(baseResult);
+        double rounded = roundToTwoDecimals(resultInTarget);
         return new Quantity<>(rounded, this.unit);
     }
 
@@ -182,10 +178,9 @@ public class Quantity<U extends IMeasurable> {
         if (targetUnit == null) {
             throw new IllegalArgumentException("Target unit cannot be null");
         }
-        double diffInBase = this.unit.convertToBaseUnit(this.value)
-                          - other.unit.convertToBaseUnit(other.value);
-        double diffInTargetUnit = targetUnit.convertFromBaseUnit(diffInBase);
-        double rounded = Math.round(diffInTargetUnit * 100.0) / 100.0;
+        double baseResult = performBaseArithmetic(other, ArithmeticOperation.SUBTRACT, targetUnit, true);
+        double resultInTarget = targetUnit.convertFromBaseUnit(baseResult);
+        double rounded = roundToTwoDecimals(resultInTarget);
         return new Quantity<>(rounded, targetUnit);
     }
 
@@ -217,12 +212,64 @@ public class Quantity<U extends IMeasurable> {
         if (other == null) {
             throw new IllegalArgumentException("Cannot divide by a null quantity");
         }
+        double baseResult = performBaseArithmetic(other, ArithmeticOperation.DIVIDE, null, false);
+        return baseResult;
+    }
+
+    // ─────────────────────────────────────────────
+    // Internal helper methods and enums
+    // ─────────────────────────────────────────────
+
+    private double performBaseArithmetic(Quantity<U> other, ArithmeticOperation op, U targetUnit, boolean useTarget) {
+        if (other == null) {
+            throw new IllegalArgumentException("Other quantity cannot be null");
+        }
+        if (useTarget && targetUnit == null) {
+            throw new IllegalArgumentException("Target unit cannot be null");
+        }
+        if (this.unit.getClass() != other.unit.getClass()) {
+            throw new IllegalArgumentException("Cannot perform arithmetic on different unit types");
+        }
         double thisBase = this.unit.convertToBaseUnit(this.value);
         double otherBase = other.unit.convertToBaseUnit(other.value);
-        if (Math.abs(otherBase) < EPSILON) {
-            throw new ArithmeticException("Cannot divide by zero quantity");
-        }
-        return thisBase / otherBase;
+        return op.compute(thisBase, otherBase);
+
+    }
+
+    // Helper method for rounding to two decimal places, handling floating-point edge cases
+    private static double roundToTwoDecimals(double value) {
+        // Precise rounding to two decimal places using BigDecimal
+        return new java.math.BigDecimal(Double.toString(value))
+                .setScale(2, java.math.RoundingMode.HALF_UP)
+                .doubleValue();
+    }
+
+
+
+    private enum ArithmeticOperation {
+        ADD {
+            @Override
+            double compute(double leftBase, double rightBase) {
+                return leftBase + rightBase;
+            }
+        },
+        SUBTRACT {
+            @Override
+            double compute(double leftBase, double rightBase) {
+                return leftBase - rightBase;
+            }
+        },
+        DIVIDE {
+            @Override
+            double compute(double leftBase, double rightBase) {
+                if (Math.abs(rightBase) < EPSILON) {
+                    throw new ArithmeticException("Cannot divide by zero quantity");
+                }
+                return leftBase / rightBase;
+            }
+        };
+
+        abstract double compute(double leftBase, double rightBase);
     }
 
     // ─────────────────────────────────────────────

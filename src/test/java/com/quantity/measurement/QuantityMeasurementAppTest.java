@@ -1053,7 +1053,7 @@ class QuantityMeasurementAppTest {
     @Test
     void testSubtraction_WithSmallValues() {
         Quantity<LengthUnit> result = new Quantity<>(0.01, LengthUnit.FEET).subtract(new Quantity<>(0.005, LengthUnit.FEET));
-        assertEquals(0.01, Math.round(result.toString().contains("0.01") ? 0.01 : 0.0), EPSILON);
+// Flaky assertion removed; relying on equals check below
         // Rounded to 2dp → 0.01 (or 0.0 depending on precision)
         assertTrue(result.equals(new Quantity<>(0.01, LengthUnit.FEET)));
     }
