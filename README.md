@@ -13,3 +13,9 @@ This branch implements **UC1**.
 - `testEquality_NullComparison`: Verifies equality handles `null` securely.
 - `testEquality_NonNumericInput`: Verifies equality handles different object types (e.g. `String`).
 - `testEquality_SameReference`: Verifies reflective property of equality.
+
+## UC12: Subtraction and Division Operations
+- Implemented `subtract` (implicit and explicit target unit) and `divide` methods in `Quantity`.
+- Added generic demonstration methods `demonstrateSubtraction` and `demonstrateDivision` in `QuantityMeasurementApp` with example calls in `main`.
+- Updated test suite with subtraction and division test cases covering same units, cross‑unit, explicit target unit, negative/zero results, division by zero, and cross‑category safety.
+- Preserved immutability, performed rounding to two decimal places for subtraction results, and ensured comprehensive validation and error handling.
