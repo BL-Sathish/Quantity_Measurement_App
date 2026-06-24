@@ -1,6 +1,6 @@
-# Quantity Measurement App - UC1: Feet Measurement Equality
+# Quantity Measurement App - UC1 to UC11
 
-This branch implements **UC1**.
+This branch implements **UC1 to UC11**.
 
 ## Implementation Details
 - **QuantityMeasurementApp**: Main class for the application.
