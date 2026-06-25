@@ -6,6 +6,11 @@ import static com.quantity.measurement.TemperatureUnit.*;
 
 @SpringBootApplication
 public class QuantityMeasurementApp {
+
+    private static final IQuantityMeasurementRepository repository = QuantityMeasurementCacheRepository.getInstance();
+    private static final IQuantityMeasurementService service = new QuantityMeasurementServiceImpl(repository);
+    private static final QuantityMeasurementController controller = new QuantityMeasurementController(service);
+
     public static void main(String[] args) {
         SpringApplication.run(QuantityMeasurementApp.class, args);
 
@@ -63,7 +68,10 @@ public class QuantityMeasurementApp {
 
         System.out.println("\n=== UC9: Category Incompatibility Demo ===");
         System.out.printf("Quantity(1.0, KILOGRAM).equals(Quantity(1.0, FEET)) → %b%n",
-                new Quantity<>(1.0, WeightUnit.KILOGRAM).equals(new Quantity<>(1.0, LengthUnit.FEET)));
+                controller.performComparison(
+                        new QuantityDTO(1.0, QuantityDTO.WeightUnit.KILOGRAM),
+                        new QuantityDTO(1.0, QuantityDTO.LengthUnit.FEET)
+                ));
 
         // UC11: Volume Measurement Demonstrations
         // ─────────────────────────────────────────────
@@ -97,9 +105,15 @@ public class QuantityMeasurementApp {
 
         System.out.println("\n=== UC11: Category Incompatibility Demo ===");
         System.out.printf("Quantity(1.0, LITRE).equals(Quantity(1.0, FEET)) → %b%n",
-                new Quantity<>(1.0, VolumeUnit.LITRE).equals(new Quantity<>(1.0, LengthUnit.FEET)));
+                controller.performComparison(
+                        new QuantityDTO(1.0, QuantityDTO.VolumeUnit.LITRE),
+                        new QuantityDTO(1.0, QuantityDTO.LengthUnit.FEET)
+                ));
         System.out.printf("Quantity(1.0, LITRE).equals(Quantity(1.0, KILOGRAM)) → %b%n",
-                new Quantity<>(1.0, VolumeUnit.LITRE).equals(new Quantity<>(1.0, WeightUnit.KILOGRAM)));
+                controller.performComparison(
+                        new QuantityDTO(1.0, QuantityDTO.VolumeUnit.LITRE),
+                        new QuantityDTO(1.0, QuantityDTO.WeightUnit.KILOGRAM)
+                ));
 
         // UC12: Subtraction and Division Demonstrations
         // ─────────────────────────────────────────────
@@ -138,50 +152,121 @@ public class QuantityMeasurementApp {
         // UC14: Temperature Measurement demonstrations
         System.out.println("\n=== UC14: Temperature Equality Comparisons ===");
         System.out.printf("Input: new Quantity<>(0.0, CELSIUS).equals(new Quantity<>(32.0, FAHRENHEIT)) → Output: %b%n",
-                new Quantity<>(0.0, CELSIUS).equals(new Quantity<>(32.0, FAHRENHEIT)));
+                controller.performComparison(
+                        new QuantityDTO(0.0, QuantityDTO.TemperatureUnit.CELSIUS),
+                        new QuantityDTO(32.0, QuantityDTO.TemperatureUnit.FAHRENHEIT)
+                ));
         System.out.printf("Input: new Quantity<>(273.15, KELVIN).equals(new Quantity<>(0.0, CELSIUS)) → Output: %b%n",
-                new Quantity<>(273.15, KELVIN).equals(new Quantity<>(0.0, CELSIUS)));
+                controller.performComparison(
+                        new QuantityDTO(273.15, QuantityDTO.TemperatureUnit.KELVIN),
+                        new QuantityDTO(0.0, QuantityDTO.TemperatureUnit.CELSIUS)
+                ));
         System.out.printf("Input: new Quantity<>(212.0, FAHRENHEIT).equals(new Quantity<>(100.0, CELSIUS)) → Output: %b%n",
-                new Quantity<>(212.0, FAHRENHEIT).equals(new Quantity<>(100.0, CELSIUS)));
+                controller.performComparison(
+                        new QuantityDTO(212.0, QuantityDTO.TemperatureUnit.FAHRENHEIT),
+                        new QuantityDTO(100.0, QuantityDTO.TemperatureUnit.CELSIUS)
+                ));
         System.out.printf("Input: new Quantity<>(100.0, CELSIUS).equals(new Quantity<>(373.15, KELVIN)) → Output: %b%n",
-                new Quantity<>(100.0, CELSIUS).equals(new Quantity<>(373.15, KELVIN)));
+                controller.performComparison(
+                        new QuantityDTO(100.0, QuantityDTO.TemperatureUnit.CELSIUS),
+                        new QuantityDTO(373.15, QuantityDTO.TemperatureUnit.KELVIN)
+                ));
         System.out.printf("Input: new Quantity<>(50.0, CELSIUS).equals(new Quantity<>(122.0, FAHRENHEIT)) → Output: %b%n",
-                new Quantity<>(50.0, CELSIUS).equals(new Quantity<>(122.0, FAHRENHEIT)));
+                controller.performComparison(
+                        new QuantityDTO(50.0, QuantityDTO.TemperatureUnit.CELSIUS),
+                        new QuantityDTO(122.0, QuantityDTO.TemperatureUnit.FAHRENHEIT)
+                ));
 
         System.out.println("\n=== UC14: Temperature Conversions ===");
         System.out.printf("Input: new Quantity<>(100.0, CELSIUS).convertTo(FAHRENHEIT) → Output: %s%n",
-                new Quantity<>(100.0, CELSIUS).convertTo(FAHRENHEIT));
+                controller.performConversion(
+                        new QuantityDTO(100.0, QuantityDTO.TemperatureUnit.CELSIUS),
+                        QuantityDTO.TemperatureUnit.FAHRENHEIT
+                ));
         System.out.printf("Input: new Quantity<>(32.0, FAHRENHEIT).convertTo(CELSIUS) → Output: %s%n",
-                new Quantity<>(32.0, FAHRENHEIT).convertTo(CELSIUS));
+                controller.performConversion(
+                        new QuantityDTO(32.0, QuantityDTO.TemperatureUnit.FAHRENHEIT),
+                        QuantityDTO.TemperatureUnit.CELSIUS
+                ));
         System.out.printf("Input: new Quantity<>(273.15, KELVIN).convertTo(CELSIUS) → Output: %s%n",
-                new Quantity<>(273.15, KELVIN).convertTo(CELSIUS));
+                controller.performConversion(
+                        new QuantityDTO(273.15, QuantityDTO.TemperatureUnit.KELVIN),
+                        QuantityDTO.TemperatureUnit.CELSIUS
+                ));
         System.out.printf("Input: new Quantity<>(0.0, CELSIUS).convertTo(KELVIN) → Output: %s%n",
-                new Quantity<>(0.0, CELSIUS).convertTo(KELVIN));
+                controller.performConversion(
+                        new QuantityDTO(0.0, QuantityDTO.TemperatureUnit.CELSIUS),
+                        QuantityDTO.TemperatureUnit.KELVIN
+                ));
         System.out.printf("Input: new Quantity<>(-40.0, CELSIUS).convertTo(FAHRENHEIT) → Output: %s%n",
-                new Quantity<>(-40.0, CELSIUS).convertTo(FAHRENHEIT));
+                controller.performConversion(
+                        new QuantityDTO(-40.0, QuantityDTO.TemperatureUnit.CELSIUS),
+                        QuantityDTO.TemperatureUnit.FAHRENHEIT
+                ));
 
         System.out.println("\n=== UC14: Unsupported Operations (Error Handling) ===");
         try {
-            new Quantity<>(100.0, CELSIUS).add(new Quantity<>(50.0, CELSIUS));
-        } catch (UnsupportedOperationException e) {
+            controller.performAddition(
+                    new QuantityDTO(100.0, QuantityDTO.TemperatureUnit.CELSIUS),
+                    new QuantityDTO(50.0, QuantityDTO.TemperatureUnit.CELSIUS),
+                    null
+            );
+        } catch (QuantityMeasurementException e) {
             System.out.printf("Input: new Quantity<>(100.0, CELSIUS).add(...) → Throws Exception: %s%n", e.getMessage());
         }
         try {
-            new Quantity<>(100.0, CELSIUS).subtract(new Quantity<>(50.0, CELSIUS));
-        } catch (UnsupportedOperationException e) {
+            controller.performSubtraction(
+                    new QuantityDTO(100.0, QuantityDTO.TemperatureUnit.CELSIUS),
+                    new QuantityDTO(50.0, QuantityDTO.TemperatureUnit.CELSIUS),
+                    null
+            );
+        } catch (QuantityMeasurementException e) {
             System.out.printf("Input: new Quantity<>(100.0, CELSIUS).subtract(...) → Throws Exception: %s%n", e.getMessage());
         }
         try {
-            new Quantity<>(100.0, CELSIUS).divide(new Quantity<>(50.0, CELSIUS));
-        } catch (UnsupportedOperationException e) {
+            controller.performDivision(
+                    new QuantityDTO(100.0, QuantityDTO.TemperatureUnit.CELSIUS),
+                    new QuantityDTO(50.0, QuantityDTO.TemperatureUnit.CELSIUS)
+            );
+        } catch (QuantityMeasurementException e) {
             System.out.printf("Input: new Quantity<>(100.0, CELSIUS).divide(...) → Throws Exception: %s%n", e.getMessage());
         }
 
         System.out.println("\n=== UC14: Cross-Category Prevention ===");
         System.out.printf("Input: new Quantity<>(100.0, CELSIUS).equals(new Quantity<>(100.0, LengthUnit.FEET)) → Output: %b%n",
-                new Quantity<>(100.0, CELSIUS).equals(new Quantity<>(100.0, LengthUnit.FEET)));
+                controller.performComparison(
+                        new QuantityDTO(100.0, QuantityDTO.TemperatureUnit.CELSIUS),
+                        new QuantityDTO(100.0, QuantityDTO.LengthUnit.FEET)
+                ));
         System.out.printf("Input: new Quantity<>(50.0, CELSIUS).equals(new Quantity<>(50.0, WeightUnit.KILOGRAM)) → Output: %b%n",
-                new Quantity<>(50.0, CELSIUS).equals(new Quantity<>(50.0, WeightUnit.KILOGRAM)));
+                controller.performComparison(
+                        new QuantityDTO(50.0, QuantityDTO.TemperatureUnit.CELSIUS),
+                        new QuantityDTO(50.0, QuantityDTO.WeightUnit.KILOGRAM)
+                ));
+
+        // Repository History serialization display
+        System.out.println("\n=== UC15: Repository History Cache Demo ===");
+        System.out.println("Total saved operations: " + repository.getAllMeasurements().size());
+        repository.getAllMeasurements().stream().limit(10).forEach(System.out::println);
+        if (repository.getAllMeasurements().size() > 10) {
+            System.out.println("... and " + (repository.getAllMeasurements().size() - 10) + " more.");
+        }
+    }
+
+    // Helper to map Domain IMeasurable to QuantityDTO.IMeasurableUnit
+    private static QuantityDTO.IMeasurableUnit mapToDtoUnit(IMeasurable domainUnit) {
+        if (domainUnit == null) return null;
+        String name = ((Enum<?>) domainUnit).name();
+        if (domainUnit instanceof LengthUnit) {
+            return QuantityDTO.LengthUnit.valueOf(name);
+        } else if (domainUnit instanceof WeightUnit) {
+            return QuantityDTO.WeightUnit.valueOf(name);
+        } else if (domainUnit instanceof VolumeUnit) {
+            return QuantityDTO.VolumeUnit.valueOf(name);
+        } else if (domainUnit instanceof TemperatureUnit) {
+            return QuantityDTO.TemperatureUnit.valueOf(name);
+        }
+        throw new IllegalArgumentException("Unsupported domain unit: " + domainUnit.getClass().getName());
     }
 
     // ─────────────────────────────────────────────
@@ -198,31 +283,36 @@ public class QuantityMeasurementApp {
     // Length: Conversion, Equality, Addition
     // ─────────────────────────────────────────────
     public static void demonstrateLengthConversion(double value, LengthUnit fromUnit, LengthUnit toUnit) {
-        double result = Quantity.convert(value, fromUnit, toUnit);
-        System.out.printf("Input: convert(%.4f, %s, %s) → Output: %.4f%n", value, fromUnit, toUnit, result);
+        QuantityDTO op = new QuantityDTO(value, mapToDtoUnit(fromUnit));
+        QuantityDTO result = controller.performConversion(op, mapToDtoUnit(toUnit));
+        System.out.printf("Input: convert(%.4f, %s, %s) → Output: %.4f%n", value, fromUnit, toUnit, result.getValue());
     }
 
     public static void demonstrateLengthConversion(Quantity<LengthUnit> length, LengthUnit toUnit) {
-        Quantity<LengthUnit> converted = length.convertTo(toUnit);
+        QuantityDTO op = new QuantityDTO(length.getValue(), mapToDtoUnit(length.getUnit()));
+        QuantityDTO converted = controller.performConversion(op, mapToDtoUnit(toUnit));
         System.out.printf("Input: %s.convertTo(%s) → Output: %s%n", length, toUnit, converted);
     }
 
     public static void demonstrateAddition(double val1, LengthUnit unit1, double val2, LengthUnit unit2) {
-        Quantity<LengthUnit> q1 = new Quantity<>(val1, unit1);
-        Quantity<LengthUnit> q2 = new Quantity<>(val2, unit2);
-        Quantity<LengthUnit> sum = q1.add(q2);
-        System.out.printf("Input: add(%s, %s)\nOutput: %s\n\n", q1, q2, sum);
+        QuantityDTO op1 = new QuantityDTO(val1, mapToDtoUnit(unit1));
+        QuantityDTO op2 = new QuantityDTO(val2, mapToDtoUnit(unit2));
+        QuantityDTO sum = controller.performAddition(op1, op2, null);
+        System.out.printf("Input: add(%s, %s)\nOutput: %s\n\n", op1, op2, sum);
     }
 
     public static void demonstrateAddition(double val1, LengthUnit unit1, double val2, LengthUnit unit2, LengthUnit targetUnit) {
-        Quantity<LengthUnit> q1 = new Quantity<>(val1, unit1);
-        Quantity<LengthUnit> q2 = new Quantity<>(val2, unit2);
-        Quantity<LengthUnit> sum = Quantity.add(q1, q2, targetUnit);
-        System.out.printf("Input: add(%s, %s, %s)\nOutput: %s\n\n", q1, q2, targetUnit, sum);
+        QuantityDTO op1 = new QuantityDTO(val1, mapToDtoUnit(unit1));
+        QuantityDTO op2 = new QuantityDTO(val2, mapToDtoUnit(unit2));
+        QuantityDTO sum = controller.performAddition(op1, op2, mapToDtoUnit(targetUnit));
+        System.out.printf("Input: add(%s, %s, %s)\nOutput: %s\n\n", op1, op2, targetUnit, sum);
     }
 
     public static void demonstrateLengthEquality(Quantity<LengthUnit> a, Quantity<LengthUnit> b) {
-        System.out.printf("Equality: %s == %s → %b%n", a, b, a.equals(b));
+        QuantityDTO op1 = new QuantityDTO(a.getValue(), mapToDtoUnit(a.getUnit()));
+        QuantityDTO op2 = new QuantityDTO(b.getValue(), mapToDtoUnit(b.getUnit()));
+        boolean result = controller.performComparison(op1, op2);
+        System.out.printf("Equality: %s == %s → %b%n", a, b, result);
     }
 
     public static void demonstrateLengthComparison(double val1, LengthUnit unit1, double val2, LengthUnit unit2) {
@@ -235,96 +325,86 @@ public class QuantityMeasurementApp {
     // UC9: Weight demos
     // ─────────────────────────────────────────────
     public static void demonstrateWeightEquality(double val1, WeightUnit unit1, double val2, WeightUnit unit2) {
-        Quantity<WeightUnit> a = new Quantity<>(val1, unit1);
-        Quantity<WeightUnit> b = new Quantity<>(val2, unit2);
-        System.out.printf("Equality: %s == %s → %b%n", a, b, a.equals(b));
+        QuantityDTO op1 = new QuantityDTO(val1, mapToDtoUnit(unit1));
+        QuantityDTO op2 = new QuantityDTO(val2, mapToDtoUnit(unit2));
+        boolean result = controller.performComparison(op1, op2);
+        System.out.printf("Equality: Quantity{%s %s} == Quantity{%s %s} → %b%n", val1, unit1, val2, unit2, result);
     }
 
     public static void demonstrateWeightConversion(double value, WeightUnit fromUnit, WeightUnit toUnit) {
-        Quantity<WeightUnit> original = new Quantity<>(value, fromUnit);
-        Quantity<WeightUnit> converted = original.convertTo(toUnit);
-        System.out.printf("Input: %s.convertTo(%s) → Output: %s%n", original, toUnit, converted);
+        QuantityDTO op = new QuantityDTO(value, mapToDtoUnit(fromUnit));
+        QuantityDTO converted = controller.performConversion(op, mapToDtoUnit(toUnit));
+        System.out.printf("Input: Quantity{%s %s}.convertTo(%s) → Output: %s%n", value, fromUnit, toUnit, converted);
     }
 
     public static void demonstrateWeightAddition(double val1, WeightUnit unit1, double val2, WeightUnit unit2) {
-        Quantity<WeightUnit> q1 = new Quantity<>(val1, unit1);
-        Quantity<WeightUnit> q2 = new Quantity<>(val2, unit2);
-        Quantity<WeightUnit> sum = q1.add(q2);
-        System.out.printf("Input: add(%s, %s)\nOutput: %s\n\n", q1, q2, sum);
+        QuantityDTO op1 = new QuantityDTO(val1, mapToDtoUnit(unit1));
+        QuantityDTO op2 = new QuantityDTO(val2, mapToDtoUnit(unit2));
+        QuantityDTO sum = controller.performAddition(op1, op2, null);
+        System.out.printf("Input: add(%s, %s)\nOutput: %s\n\n", op1, op2, sum);
     }
 
     public static void demonstrateWeightAddition(double val1, WeightUnit unit1, double val2, WeightUnit unit2, WeightUnit targetUnit) {
-        Quantity<WeightUnit> q1 = new Quantity<>(val1, unit1);
-        Quantity<WeightUnit> q2 = new Quantity<>(val2, unit2);
-        Quantity<WeightUnit> sum = Quantity.add(q1, q2, targetUnit);
-        System.out.printf("Input: add(%s, %s, %s)\nOutput: %s\n\n", q1, q2, targetUnit, sum);
+        QuantityDTO op1 = new QuantityDTO(val1, mapToDtoUnit(unit1));
+        QuantityDTO op2 = new QuantityDTO(val2, mapToDtoUnit(unit2));
+        QuantityDTO sum = controller.performAddition(op1, op2, mapToDtoUnit(targetUnit));
+        System.out.printf("Input: add(%s, %s, %s)\nOutput: %s\n\n", op1, op2, targetUnit, sum);
     }
 
     // ─────────────────────────────────────────────
     // UC11: Volume demos
     // ─────────────────────────────────────────────
     public static void demonstrateVolumeEquality(double val1, VolumeUnit unit1, double val2, VolumeUnit unit2) {
-        Quantity<VolumeUnit> a = new Quantity<>(val1, unit1);
-        Quantity<VolumeUnit> b = new Quantity<>(val2, unit2);
-        System.out.printf("Equality: %s == %s → %b%n", a, b, a.equals(b));
+        QuantityDTO op1 = new QuantityDTO(val1, mapToDtoUnit(unit1));
+        QuantityDTO op2 = new QuantityDTO(val2, mapToDtoUnit(unit2));
+        boolean result = controller.performComparison(op1, op2);
+        System.out.printf("Equality: Quantity{%s %s} == Quantity{%s %s} → %b%n", val1, unit1, val2, unit2, result);
     }
 
     public static void demonstrateVolumeConversion(double value, VolumeUnit fromUnit, VolumeUnit toUnit) {
-        Quantity<VolumeUnit> original = new Quantity<>(value, fromUnit);
-        Quantity<VolumeUnit> converted = original.convertTo(toUnit);
-        System.out.printf("Input: %s.convertTo(%s) → Output: %s%n", original, toUnit, converted);
+        QuantityDTO op = new QuantityDTO(value, mapToDtoUnit(fromUnit));
+        QuantityDTO converted = controller.performConversion(op, mapToDtoUnit(toUnit));
+        System.out.printf("Input: Quantity{%s %s}.convertTo(%s) → Output: %s%n", value, fromUnit, toUnit, converted);
     }
 
     public static void demonstrateVolumeAddition(double val1, VolumeUnit unit1, double val2, VolumeUnit unit2) {
-        Quantity<VolumeUnit> q1 = new Quantity<>(val1, unit1);
-        Quantity<VolumeUnit> q2 = new Quantity<>(val2, unit2);
-        Quantity<VolumeUnit> sum = q1.add(q2);
-        System.out.printf("Input: add(%s, %s)\nOutput: %s\n\n", q1, q2, sum);
+        QuantityDTO op1 = new QuantityDTO(val1, mapToDtoUnit(unit1));
+        QuantityDTO op2 = new QuantityDTO(val2, mapToDtoUnit(unit2));
+        QuantityDTO sum = controller.performAddition(op1, op2, null);
+        System.out.printf("Input: add(%s, %s)\nOutput: %s\n\n", op1, op2, sum);
     }
 
     public static void demonstrateVolumeAddition(double val1, VolumeUnit unit1, double val2, VolumeUnit unit2, VolumeUnit targetUnit) {
-        Quantity<VolumeUnit> q1 = new Quantity<>(val1, unit1);
-        Quantity<VolumeUnit> q2 = new Quantity<>(val2, unit2);
-        Quantity<VolumeUnit> sum = Quantity.add(q1, q2, targetUnit);
-        System.out.printf("Input: add(%s, %s, %s)\nOutput: %s\n\n", q1, q2, targetUnit, sum);
+        QuantityDTO op1 = new QuantityDTO(val1, mapToDtoUnit(unit1));
+        QuantityDTO op2 = new QuantityDTO(val2, mapToDtoUnit(unit2));
+        QuantityDTO sum = controller.performAddition(op1, op2, mapToDtoUnit(targetUnit));
+        System.out.printf("Input: add(%s, %s, %s)\nOutput: %s\n\n", op1, op2, targetUnit, sum);
     }
 
     // ─────────────────────────────────────────────
     // UC12: Generic Subtraction demos
     // ─────────────────────────────────────────────
-
-    /**
-     * Demonstrates subtraction with implicit target unit (first operand's unit).
-     */
     public static <U extends IMeasurable> void demonstrateSubtraction(double val1, U unit1, double val2, U unit2) {
-        Quantity<U> q1 = new Quantity<>(val1, unit1);
-        Quantity<U> q2 = new Quantity<>(val2, unit2);
-        Quantity<U> diff = q1.subtract(q2);
-        System.out.printf("Input: %s.subtract(%s)%nOutput: %s%n%n", q1, q2, diff);
+        QuantityDTO op1 = new QuantityDTO(val1, mapToDtoUnit(unit1));
+        QuantityDTO op2 = new QuantityDTO(val2, mapToDtoUnit(unit2));
+        QuantityDTO diff = controller.performSubtraction(op1, op2, null);
+        System.out.printf("Input: %s.subtract(%s)%nOutput: %s%n%n", op1, op2, diff);
     }
 
-    /**
-     * Demonstrates subtraction with explicit target unit specification.
-     */
     public static <U extends IMeasurable> void demonstrateSubtraction(double val1, U unit1, double val2, U unit2, U targetUnit) {
-        Quantity<U> q1 = new Quantity<>(val1, unit1);
-        Quantity<U> q2 = new Quantity<>(val2, unit2);
-        Quantity<U> diff = q1.subtract(q2, targetUnit);
-        System.out.printf("Input: %s.subtract(%s, %s)%nOutput: %s%n%n", q1, q2, targetUnit, diff);
+        QuantityDTO op1 = new QuantityDTO(val1, mapToDtoUnit(unit1));
+        QuantityDTO op2 = new QuantityDTO(val2, mapToDtoUnit(unit2));
+        QuantityDTO diff = controller.performSubtraction(op1, op2, mapToDtoUnit(targetUnit));
+        System.out.printf("Input: %s.subtract(%s, %s)%nOutput: %s%n%n", op1, op2, targetUnit, diff);
     }
 
     // ─────────────────────────────────────────────
     // UC12: Generic Division demos
     // ─────────────────────────────────────────────
-
-    /**
-     * Demonstrates division returning a dimensionless scalar ratio.
-     */
     public static <U extends IMeasurable> void demonstrateDivision(double val1, U unit1, double val2, U unit2) {
-        Quantity<U> q1 = new Quantity<>(val1, unit1);
-        Quantity<U> q2 = new Quantity<>(val2, unit2);
-        double ratio = q1.divide(q2);
-        System.out.printf("Input: %s.divide(%s)%nOutput: %.6f%n%n", q1, q2, ratio);
+        QuantityDTO op1 = new QuantityDTO(val1, mapToDtoUnit(unit1));
+        QuantityDTO op2 = new QuantityDTO(val2, mapToDtoUnit(unit2));
+        double ratio = controller.performDivision(op1, op2);
+        System.out.printf("Input: %s.divide(%s)%nOutput: %.6f%n%n", op1, op2, ratio);
     }
 }
-

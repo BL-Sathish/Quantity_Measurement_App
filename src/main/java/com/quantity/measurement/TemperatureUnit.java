@@ -72,4 +72,9 @@ public enum TemperatureUnit implements IMeasurable {
     public double getConversionFactor() {
         throw new UnsupportedOperationException("Temperature conversions are non-linear and do not use a constant conversion factor");
     }
+
+    @Override
+    public String getMeasurementType() {
+        return "Temperature";
+    }
 }

@@ -36,6 +36,15 @@ public class Quantity<U extends IMeasurable> {
         this.unit = unit;
     }
 
+    public double getValue() {
+        return value;
+    }
+
+    public U getUnit() {
+        return unit;
+    }
+
+
     // ─────────────────────────────────────────────
     // Public API: conversion (delegates to U)
     // ─────────────────────────────────────────────

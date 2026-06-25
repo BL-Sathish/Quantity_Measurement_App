@@ -77,4 +77,9 @@ public enum LengthUnit implements IMeasurable {
     public double convertFromBaseUnit(double baseValue) {
         return baseValue / conversionFactor;
     }
+
+    @Override
+    public String getMeasurementType() {
+        return "Length";
+    }
 }

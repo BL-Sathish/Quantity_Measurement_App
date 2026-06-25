@@ -66,4 +66,9 @@ public enum VolumeUnit implements IMeasurable {
     public double convertFromBaseUnit(double baseValue) {
         return baseValue / conversionFactor;
     }
+
+    @Override
+    public String getMeasurementType() {
+        return "Volume";
+    }
 }

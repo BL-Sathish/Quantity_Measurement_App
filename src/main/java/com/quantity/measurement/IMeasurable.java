@@ -22,6 +22,11 @@ public interface IMeasurable {
     double convertFromBaseUnit(double baseValue);
 
     /**
+     * Returns the measurement type/category name of this unit (e.g. "Length", "Weight", "Volume", "Temperature").
+     */
+    String getMeasurementType();
+
+    /**
      * Lambda expression/interface representing the default behavior of supporting arithmetic operations.
      */
     SupportsArithmetic supportsArithmetic = () -> true;

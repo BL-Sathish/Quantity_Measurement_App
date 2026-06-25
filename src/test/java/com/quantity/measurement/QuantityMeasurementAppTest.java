@@ -1980,4 +1980,187 @@ class QuantityMeasurementAppTest {
         Quantity<TemperatureUnit> temp = new Quantity<>(100.0, CELSIUS);
         assertTrue(temp.convertTo(CELSIUS).equals(new Quantity<>(100.0, CELSIUS)));
     }
+
+    // ─────────────────────────────────────────────
+    // UC15 N-Tier Architecture Tests
+    // ─────────────────────────────────────────────
+
+    @Test
+    void testQuantityDTO_GettersAndSetters() {
+        QuantityDTO dto = new QuantityDTO(10.0, QuantityDTO.LengthUnit.FEET);
+        assertEquals(10.0, dto.getValue());
+        assertEquals(QuantityDTO.LengthUnit.FEET, dto.getUnit());
+        assertEquals("Length", dto.getUnit().getMeasurementType());
+
+        dto.setValue(20.0);
+        dto.setUnit(QuantityDTO.WeightUnit.KILOGRAM);
+        assertEquals(20.0, dto.getValue());
+        assertEquals(QuantityDTO.WeightUnit.KILOGRAM, dto.getUnit());
+        assertEquals("Weight", dto.getUnit().getMeasurementType());
+    }
+
+    @Test
+    void testQuantityModel_Initialization() {
+        QuantityModel<LengthUnit> model = new QuantityModel<>(5.0, LengthUnit.FEET);
+        assertEquals(5.0, model.getValue());
+        assertEquals(LengthUnit.FEET, model.getUnit());
+
+        assertThrows(IllegalArgumentException.class, () -> new QuantityModel<>(5.0, null));
+    }
+
+    @Test
+    void testQuantityMeasurementEntity_Constructors() {
+        QuantityMeasurementEntity entity1 = new QuantityMeasurementEntity(1.0, "FEET", "Length", 12.0, "INCH", "conversion");
+        assertNotNull(entity1.getId());
+        assertEquals(1.0, entity1.getOperand1Value());
+        assertEquals("FEET", entity1.getOperand1Unit());
+        assertEquals("Length", entity1.getOperand1Type());
+        assertEquals(12.0, entity1.getResultValue());
+        assertEquals("INCH", entity1.getResultUnit());
+        assertEquals("conversion", entity1.getOperationType());
+        assertFalse(entity1.getHasError());
+
+        QuantityMeasurementEntity entity2 = new QuantityMeasurementEntity(1.0, "FEET", "Length", 2.0, "FEET", "Length", true, "comparison");
+        assertTrue(entity2.getResultBoolean());
+        assertEquals("comparison", entity2.getOperationType());
+
+        QuantityMeasurementEntity entity3 = new QuantityMeasurementEntity("Error occurred", "addition");
+        assertTrue(entity3.getHasError());
+        assertEquals("Error occurred", entity3.getErrorMessage());
+        assertEquals("addition", entity3.getOperationType());
+    }
+
+    @Test
+    void testQuantityMeasurementCacheRepository_SingletonAndPersistence() {
+        QuantityMeasurementCacheRepository repo = QuantityMeasurementCacheRepository.getInstance();
+        assertNotNull(repo);
+        repo.clear(); // Start fresh
+
+        QuantityMeasurementEntity entity = new QuantityMeasurementEntity(1.0, "FEET", "Length", 12.0, "INCH", "conversion");
+        repo.save(entity);
+
+        assertEquals(1, repo.getAllMeasurements().size());
+        assertEquals(entity.getId(), repo.getAllMeasurements().get(0).getId());
+
+        // Test singleton reset and reload from disk
+        QuantityMeasurementCacheRepository.resetInstance();
+        QuantityMeasurementCacheRepository repo2 = QuantityMeasurementCacheRepository.getInstance();
+        assertEquals(1, repo2.getAllMeasurements().size());
+        assertEquals(entity.getId(), repo2.getAllMeasurements().get(0).getId());
+
+        repo2.clear();
+    }
+
+    @Test
+    void testQuantityMeasurementServiceImpl_Comparison() {
+        QuantityMeasurementCacheRepository repo = QuantityMeasurementCacheRepository.getInstance();
+        repo.clear();
+        IQuantityMeasurementService service = new QuantityMeasurementServiceImpl(repo);
+
+        QuantityDTO op1 = new QuantityDTO(1.0, QuantityDTO.LengthUnit.FEET);
+        QuantityDTO op2 = new QuantityDTO(12.0, QuantityDTO.LengthUnit.INCH);
+
+        assertTrue(service.compare(op1, op2));
+        assertEquals(1, repo.getAllMeasurements().size());
+        QuantityMeasurementEntity saved = repo.getAllMeasurements().get(0);
+        assertEquals("comparison", saved.getOperationType());
+        assertTrue(saved.getResultBoolean());
+        repo.clear();
+    }
+
+    @Test
+    void testQuantityMeasurementServiceImpl_Conversion() {
+        QuantityMeasurementCacheRepository repo = QuantityMeasurementCacheRepository.getInstance();
+        repo.clear();
+        IQuantityMeasurementService service = new QuantityMeasurementServiceImpl(repo);
+
+        QuantityDTO op = new QuantityDTO(1.0, QuantityDTO.LengthUnit.FEET);
+        QuantityDTO result = service.convert(op, QuantityDTO.LengthUnit.INCH);
+
+        assertEquals(12.0, result.getValue());
+        assertEquals(QuantityDTO.LengthUnit.INCH, result.getUnit());
+        assertEquals(1, repo.getAllMeasurements().size());
+        repo.clear();
+    }
+
+    @Test
+    void testQuantityMeasurementServiceImpl_Addition() {
+        QuantityMeasurementCacheRepository repo = QuantityMeasurementCacheRepository.getInstance();
+        repo.clear();
+        IQuantityMeasurementService service = new QuantityMeasurementServiceImpl(repo);
+
+        QuantityDTO op1 = new QuantityDTO(1.0, QuantityDTO.LengthUnit.FEET);
+        QuantityDTO op2 = new QuantityDTO(12.0, QuantityDTO.LengthUnit.INCH);
+
+        QuantityDTO sum = service.add(op1, op2, QuantityDTO.LengthUnit.FEET);
+        assertEquals(2.0, sum.getValue());
+        assertEquals(QuantityDTO.LengthUnit.FEET, sum.getUnit());
+        assertEquals(1, repo.getAllMeasurements().size());
+        repo.clear();
+    }
+
+    @Test
+    void testQuantityMeasurementServiceImpl_Subtraction() {
+        QuantityMeasurementCacheRepository repo = QuantityMeasurementCacheRepository.getInstance();
+        repo.clear();
+        IQuantityMeasurementService service = new QuantityMeasurementServiceImpl(repo);
+
+        QuantityDTO op1 = new QuantityDTO(10.0, QuantityDTO.LengthUnit.FEET);
+        QuantityDTO op2 = new QuantityDTO(6.0, QuantityDTO.LengthUnit.INCH);
+
+        QuantityDTO diff = service.subtract(op1, op2, QuantityDTO.LengthUnit.FEET);
+        assertEquals(9.5, diff.getValue(), EPSILON);
+        assertEquals(1, repo.getAllMeasurements().size());
+        repo.clear();
+    }
+
+    @Test
+    void testQuantityMeasurementServiceImpl_Division() {
+        QuantityMeasurementCacheRepository repo = QuantityMeasurementCacheRepository.getInstance();
+        repo.clear();
+        IQuantityMeasurementService service = new QuantityMeasurementServiceImpl(repo);
+
+        QuantityDTO op1 = new QuantityDTO(10.0, QuantityDTO.LengthUnit.FEET);
+        QuantityDTO op2 = new QuantityDTO(2.0, QuantityDTO.LengthUnit.FEET);
+
+        double ratio = service.divide(op1, op2);
+        assertEquals(5.0, ratio, EPSILON);
+        assertEquals(1, repo.getAllMeasurements().size());
+        repo.clear();
+    }
+
+    @Test
+    void testQuantityMeasurementServiceImpl_UnsupportedOperations_ThrowsCustomException() {
+        QuantityMeasurementCacheRepository repo = QuantityMeasurementCacheRepository.getInstance();
+        repo.clear();
+        IQuantityMeasurementService service = new QuantityMeasurementServiceImpl(repo);
+
+        QuantityDTO op1 = new QuantityDTO(100.0, QuantityDTO.TemperatureUnit.CELSIUS);
+        QuantityDTO op2 = new QuantityDTO(50.0, QuantityDTO.TemperatureUnit.CELSIUS);
+
+        assertThrows(QuantityMeasurementException.class, () -> service.add(op1, op2, null));
+        assertEquals(1, repo.getAllMeasurements().size());
+        assertTrue(repo.getAllMeasurements().get(0).getHasError());
+        repo.clear();
+    }
+
+    @Test
+    void testQuantityMeasurementController_Routing() {
+        QuantityMeasurementCacheRepository repo = QuantityMeasurementCacheRepository.getInstance();
+        repo.clear();
+        IQuantityMeasurementService service = new QuantityMeasurementServiceImpl(repo);
+        QuantityMeasurementController controller = new QuantityMeasurementController(service);
+
+        QuantityDTO op1 = new QuantityDTO(1.0, QuantityDTO.LengthUnit.FEET);
+        QuantityDTO op2 = new QuantityDTO(12.0, QuantityDTO.LengthUnit.INCH);
+
+        assertTrue(controller.performComparison(op1, op2));
+        assertEquals(12.0, controller.performConversion(op1, QuantityDTO.LengthUnit.INCH).getValue());
+        assertEquals(2.0, controller.performAddition(op1, op2, QuantityDTO.LengthUnit.FEET).getValue());
+        assertEquals(0.0, controller.performSubtraction(op1, op2, QuantityDTO.LengthUnit.FEET).getValue());
+        assertEquals(1.0, controller.performDivision(op1, op2));
+
+        repo.clear();
+    }
 }
+
