@@ -2,6 +2,7 @@ package com.quantity.measurement;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import static com.quantity.measurement.TemperatureUnit.*;
 
 @SpringBootApplication
 public class QuantityMeasurementApp {
@@ -133,6 +134,54 @@ public class QuantityMeasurementApp {
         demonstrateDivision(12.0, LengthUnit.INCH, 1.0, LengthUnit.FEET);
         demonstrateDivision(2000.0, WeightUnit.GRAM, 1.0, WeightUnit.KILOGRAM);
         demonstrateDivision(1000.0, VolumeUnit.MILLILITRE, 1.0, VolumeUnit.LITRE);
+
+        // UC14: Temperature Measurement demonstrations
+        System.out.println("\n=== UC14: Temperature Equality Comparisons ===");
+        System.out.printf("Input: new Quantity<>(0.0, CELSIUS).equals(new Quantity<>(32.0, FAHRENHEIT)) → Output: %b%n",
+                new Quantity<>(0.0, CELSIUS).equals(new Quantity<>(32.0, FAHRENHEIT)));
+        System.out.printf("Input: new Quantity<>(273.15, KELVIN).equals(new Quantity<>(0.0, CELSIUS)) → Output: %b%n",
+                new Quantity<>(273.15, KELVIN).equals(new Quantity<>(0.0, CELSIUS)));
+        System.out.printf("Input: new Quantity<>(212.0, FAHRENHEIT).equals(new Quantity<>(100.0, CELSIUS)) → Output: %b%n",
+                new Quantity<>(212.0, FAHRENHEIT).equals(new Quantity<>(100.0, CELSIUS)));
+        System.out.printf("Input: new Quantity<>(100.0, CELSIUS).equals(new Quantity<>(373.15, KELVIN)) → Output: %b%n",
+                new Quantity<>(100.0, CELSIUS).equals(new Quantity<>(373.15, KELVIN)));
+        System.out.printf("Input: new Quantity<>(50.0, CELSIUS).equals(new Quantity<>(122.0, FAHRENHEIT)) → Output: %b%n",
+                new Quantity<>(50.0, CELSIUS).equals(new Quantity<>(122.0, FAHRENHEIT)));
+
+        System.out.println("\n=== UC14: Temperature Conversions ===");
+        System.out.printf("Input: new Quantity<>(100.0, CELSIUS).convertTo(FAHRENHEIT) → Output: %s%n",
+                new Quantity<>(100.0, CELSIUS).convertTo(FAHRENHEIT));
+        System.out.printf("Input: new Quantity<>(32.0, FAHRENHEIT).convertTo(CELSIUS) → Output: %s%n",
+                new Quantity<>(32.0, FAHRENHEIT).convertTo(CELSIUS));
+        System.out.printf("Input: new Quantity<>(273.15, KELVIN).convertTo(CELSIUS) → Output: %s%n",
+                new Quantity<>(273.15, KELVIN).convertTo(CELSIUS));
+        System.out.printf("Input: new Quantity<>(0.0, CELSIUS).convertTo(KELVIN) → Output: %s%n",
+                new Quantity<>(0.0, CELSIUS).convertTo(KELVIN));
+        System.out.printf("Input: new Quantity<>(-40.0, CELSIUS).convertTo(FAHRENHEIT) → Output: %s%n",
+                new Quantity<>(-40.0, CELSIUS).convertTo(FAHRENHEIT));
+
+        System.out.println("\n=== UC14: Unsupported Operations (Error Handling) ===");
+        try {
+            new Quantity<>(100.0, CELSIUS).add(new Quantity<>(50.0, CELSIUS));
+        } catch (UnsupportedOperationException e) {
+            System.out.printf("Input: new Quantity<>(100.0, CELSIUS).add(...) → Throws Exception: %s%n", e.getMessage());
+        }
+        try {
+            new Quantity<>(100.0, CELSIUS).subtract(new Quantity<>(50.0, CELSIUS));
+        } catch (UnsupportedOperationException e) {
+            System.out.printf("Input: new Quantity<>(100.0, CELSIUS).subtract(...) → Throws Exception: %s%n", e.getMessage());
+        }
+        try {
+            new Quantity<>(100.0, CELSIUS).divide(new Quantity<>(50.0, CELSIUS));
+        } catch (UnsupportedOperationException e) {
+            System.out.printf("Input: new Quantity<>(100.0, CELSIUS).divide(...) → Throws Exception: %s%n", e.getMessage());
+        }
+
+        System.out.println("\n=== UC14: Cross-Category Prevention ===");
+        System.out.printf("Input: new Quantity<>(100.0, CELSIUS).equals(new Quantity<>(100.0, LengthUnit.FEET)) → Output: %b%n",
+                new Quantity<>(100.0, CELSIUS).equals(new Quantity<>(100.0, LengthUnit.FEET)));
+        System.out.printf("Input: new Quantity<>(50.0, CELSIUS).equals(new Quantity<>(50.0, WeightUnit.KILOGRAM)) → Output: %b%n",
+                new Quantity<>(50.0, CELSIUS).equals(new Quantity<>(50.0, WeightUnit.KILOGRAM)));
     }
 
     // ─────────────────────────────────────────────

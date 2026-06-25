@@ -53,6 +53,9 @@ public class Quantity<U extends IMeasurable> {
         }
         double baseValue = this.unit.convertToBaseUnit(this.value);
         double convertedValue = targetUnit.convertFromBaseUnit(baseValue);
+        if (this.unit instanceof TemperatureUnit) {
+            convertedValue = roundToTwoDecimals(convertedValue);
+        }
         return new Quantity<>(convertedValue, targetUnit);
     }
 
@@ -74,7 +77,11 @@ public class Quantity<U extends IMeasurable> {
             throw new IllegalArgumentException("Value must be a finite number, but was: " + value);
         }
         double baseValue = sourceUnit.convertToBaseUnit(value);
-        return targetUnit.convertFromBaseUnit(baseValue);
+        double convertedValue = targetUnit.convertFromBaseUnit(baseValue);
+        if (sourceUnit instanceof TemperatureUnit) {
+            convertedValue = roundToTwoDecimals(convertedValue);
+        }
+        return convertedValue;
     }
 
     // ─────────────────────────────────────────────
@@ -230,10 +237,13 @@ public class Quantity<U extends IMeasurable> {
         if (this.unit.getClass() != other.unit.getClass()) {
             throw new IllegalArgumentException("Cannot perform arithmetic on different unit types");
         }
+        // Validate that the operation is supported by the unit (e.g., Temperature may reject)
+        String operationName = op.name().toLowerCase();
+        this.unit.validateOperationSupport(operationName);
+        other.unit.validateOperationSupport(operationName);
         double thisBase = this.unit.convertToBaseUnit(this.value);
         double otherBase = other.unit.convertToBaseUnit(other.value);
         return op.compute(thisBase, otherBase);
-
     }
 
     // Helper method for rounding to two decimal places, handling floating-point edge cases
