@@ -1,64 +1,49 @@
 package com.app.quantitymeasurement.services;
 
-import com.app.quantitymeasurement.entity.Quantity;
-import com.app.quantitymeasurement.entity.QuantityDTO;
-import com.app.quantitymeasurement.entity.QuantityMeasurementEntity;
+import com.app.quantitymeasurement.model.*;
 import com.app.quantitymeasurement.exception.QuantityMeasurementException;
-import com.app.quantitymeasurement.repository.IQuantityMeasurementRepository;
+import com.app.quantitymeasurement.repository.QuantityMeasurementRepository;
 import com.app.quantitymeasurement.unit.*;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * Standard implementation of the IQuantityMeasurementService.
- * Maps DTOs to internal models, delegates operations to Quantity logic,
- * and saves records to IQuantityMeasurementRepository.
- * Enhanced with java.util.logging for UC16.
+ * Modernized Spring Service implementing IQuantityMeasurementService.
+ * Integrates with Spring Data JPA repository and performs core calculations.
  */
+@Service
 public class QuantityMeasurementServiceImpl implements IQuantityMeasurementService {
 
     private static final Logger LOGGER = Logger.getLogger(QuantityMeasurementServiceImpl.class.getName());
 
-    private final IQuantityMeasurementRepository repository;
-
-    /**
-     * Dependency Injection via constructor.
-     *
-     * @param repository the persistence repository
-     */
-    public QuantityMeasurementServiceImpl(IQuantityMeasurementRepository repository) {
-        if (repository == null) {
-            throw new IllegalArgumentException("Repository cannot be null");
-        }
-        this.repository = repository;
-        LOGGER.info("QuantityMeasurementServiceImpl initialized with repository: " + repository.getClass().getSimpleName());
-    }
+    @Autowired
+    private QuantityMeasurementRepository repository;
 
     @Override
-    public boolean compare(QuantityDTO op1, QuantityDTO op2) {
-        String operationType = "comparison";
+    public QuantityMeasurementDTO compare(QuantityDTO op1, QuantityDTO op2) {
+        String operation = "compare";
         try {
             if (op1 == null || op2 == null) {
                 throw new IllegalArgumentException("Operands cannot be null");
             }
-            LOGGER.fine("Comparing: " + op1 + " with " + op2);
+            LOGGER.fine("Service: comparing " + op1 + " and " + op2);
 
             IMeasurable dom1 = mapToDomainUnit(op1.getUnit());
             IMeasurable dom2 = mapToDomainUnit(op2.getUnit());
 
-            // Check if units are of different categories.
-            // If they are different, they are not equal, but we do not throw exceptions.
+            // Check if units are of different categories
             if (dom1.getClass() != dom2.getClass()) {
-                boolean result = false;
                 QuantityMeasurementEntity entity = new QuantityMeasurementEntity(
-                        op1.getValue(), op1.getUnit().name(), op1.getUnit().getMeasurementType(),
-                        op2.getValue(), op2.getUnit().name(), op2.getUnit().getMeasurementType(),
-                        result, operationType
+                        op1.getValue(), op1.getUnitName(), op1.getMeasurementType(),
+                        op2.getValue(), op2.getUnitName(), op2.getMeasurementType(),
+                        operation, "false", false
                 );
-                repository.save(entity);
-                LOGGER.fine("Cross-category comparison result: " + result);
-                return result;
+                QuantityMeasurementEntity saved = repository.save(entity);
+                return QuantityMeasurementDTO.fromEntity(saved);
             }
 
             @SuppressWarnings({"rawtypes", "unchecked"})
@@ -68,29 +53,29 @@ public class QuantityMeasurementServiceImpl implements IQuantityMeasurementServi
             boolean result = q1.equals(q2);
 
             QuantityMeasurementEntity entity = new QuantityMeasurementEntity(
-                    op1.getValue(), op1.getUnit().name(), op1.getUnit().getMeasurementType(),
-                    op2.getValue(), op2.getUnit().name(), op2.getUnit().getMeasurementType(),
-                    result, operationType
+                    op1.getValue(), op1.getUnitName(), op1.getMeasurementType(),
+                    op2.getValue(), op2.getUnitName(), op2.getMeasurementType(),
+                    operation, String.valueOf(result), false
             );
-            repository.save(entity);
-            LOGGER.fine("Comparison result: " + result);
-            return result;
+            QuantityMeasurementEntity saved = repository.save(entity);
+            return QuantityMeasurementDTO.fromEntity(saved);
+
         } catch (Exception e) {
             LOGGER.log(Level.WARNING, "Comparison failed: " + e.getMessage(), e);
-            QuantityMeasurementEntity entity = new QuantityMeasurementEntity(e.getMessage(), operationType);
+            QuantityMeasurementEntity entity = new QuantityMeasurementEntity(e.getMessage(), operation, true);
             repository.save(entity);
             throw new QuantityMeasurementException(e.getMessage(), e);
         }
     }
 
     @Override
-    public QuantityDTO convert(QuantityDTO op, QuantityDTO.IMeasurableUnit targetUnit) {
-        String operationType = "conversion";
+    public QuantityMeasurementDTO convert(QuantityDTO op, QuantityDTO.IMeasurableUnit targetUnit) {
+        String operation = "convert";
         try {
             if (op == null || targetUnit == null) {
                 throw new IllegalArgumentException("Operand and target unit cannot be null");
             }
-            LOGGER.fine("Converting: " + op + " to " + targetUnit.name());
+            LOGGER.fine("Service: converting " + op + " to " + targetUnit.name());
 
             IMeasurable sourceDom = mapToDomainUnit(op.getUnit());
             IMeasurable targetDom = mapToDomainUnit(targetUnit);
@@ -105,31 +90,30 @@ public class QuantityMeasurementServiceImpl implements IQuantityMeasurementServi
             @SuppressWarnings("unchecked")
             Quantity converted = q.convertTo(targetDom);
 
-            QuantityDTO resultDto = new QuantityDTO(converted.getValue(), mapToDtoUnit(converted.getUnit()));
-
             QuantityMeasurementEntity entity = new QuantityMeasurementEntity(
-                    op.getValue(), op.getUnit().name(), op.getUnit().getMeasurementType(),
-                    converted.getValue(), ((Enum<?>) converted.getUnit()).name(), operationType
+                    op.getValue(), op.getUnitName(), op.getMeasurementType(),
+                    0.0, targetUnit.name(), targetUnit.getMeasurementType() + "Unit",
+                    operation, converted.getValue(), targetUnit.name(), targetUnit.getMeasurementType() + "Unit", false
             );
-            repository.save(entity);
-            LOGGER.fine("Conversion result: " + resultDto);
-            return resultDto;
+            QuantityMeasurementEntity saved = repository.save(entity);
+            return QuantityMeasurementDTO.fromEntity(saved);
+
         } catch (Exception e) {
             LOGGER.log(Level.WARNING, "Conversion failed: " + e.getMessage(), e);
-            QuantityMeasurementEntity entity = new QuantityMeasurementEntity(e.getMessage(), operationType);
+            QuantityMeasurementEntity entity = new QuantityMeasurementEntity(e.getMessage(), operation, true);
             repository.save(entity);
             throw new QuantityMeasurementException(e.getMessage(), e);
         }
     }
 
     @Override
-    public QuantityDTO add(QuantityDTO op1, QuantityDTO op2, QuantityDTO.IMeasurableUnit targetUnit) {
-        String operationType = "addition";
+    public QuantityMeasurementDTO add(QuantityDTO op1, QuantityDTO op2, QuantityDTO.IMeasurableUnit targetUnit) {
+        String operation = "add";
         try {
             if (op1 == null || op2 == null) {
                 throw new IllegalArgumentException("Operands cannot be null");
             }
-            LOGGER.fine("Adding: " + op1 + " + " + op2);
+            LOGGER.fine("Service: adding " + op1 + " + " + op2);
 
             IMeasurable dom1 = mapToDomainUnit(op1.getUnit());
             IMeasurable dom2 = mapToDomainUnit(op2.getUnit());
@@ -150,32 +134,32 @@ public class QuantityMeasurementServiceImpl implements IQuantityMeasurementServi
 
             @SuppressWarnings("unchecked")
             Quantity sum = Quantity.add(q1, q2, targetDom);
-            QuantityDTO resultDto = new QuantityDTO(sum.getValue(), mapToDtoUnit(sum.getUnit()));
 
             QuantityMeasurementEntity entity = new QuantityMeasurementEntity(
-                    op1.getValue(), op1.getUnit().name(), op1.getUnit().getMeasurementType(),
-                    op2.getValue(), op2.getUnit().name(), op2.getUnit().getMeasurementType(),
-                    sum.getValue(), ((Enum<?>) sum.getUnit()).name(), operationType
+                    op1.getValue(), op1.getUnitName(), op1.getMeasurementType(),
+                    op2.getValue(), op2.getUnitName(), op2.getMeasurementType(),
+                    operation, sum.getValue(), ((Enum<?>) sum.getUnit()).name(),
+                    sum.getUnit().getMeasurementType() + "Unit", null, false
             );
-            repository.save(entity);
-            LOGGER.fine("Addition result: " + resultDto);
-            return resultDto;
+            QuantityMeasurementEntity saved = repository.save(entity);
+            return QuantityMeasurementDTO.fromEntity(saved);
+
         } catch (Exception e) {
             LOGGER.log(Level.WARNING, "Addition failed: " + e.getMessage(), e);
-            QuantityMeasurementEntity entity = new QuantityMeasurementEntity(e.getMessage(), operationType);
+            QuantityMeasurementEntity entity = new QuantityMeasurementEntity(e.getMessage(), operation, true);
             repository.save(entity);
             throw new QuantityMeasurementException(e.getMessage(), e);
         }
     }
 
     @Override
-    public QuantityDTO subtract(QuantityDTO op1, QuantityDTO op2, QuantityDTO.IMeasurableUnit targetUnit) {
-        String operationType = "subtraction";
+    public QuantityMeasurementDTO subtract(QuantityDTO op1, QuantityDTO op2, QuantityDTO.IMeasurableUnit targetUnit) {
+        String operation = "subtract";
         try {
             if (op1 == null || op2 == null) {
                 throw new IllegalArgumentException("Operands cannot be null");
             }
-            LOGGER.fine("Subtracting: " + op1 + " - " + op2);
+            LOGGER.fine("Service: subtracting " + op1 + " - " + op2);
 
             IMeasurable dom1 = mapToDomainUnit(op1.getUnit());
             IMeasurable dom2 = mapToDomainUnit(op2.getUnit());
@@ -196,32 +180,32 @@ public class QuantityMeasurementServiceImpl implements IQuantityMeasurementServi
 
             @SuppressWarnings("unchecked")
             Quantity diff = q1.subtract(q2, targetDom);
-            QuantityDTO resultDto = new QuantityDTO(diff.getValue(), mapToDtoUnit(diff.getUnit()));
 
             QuantityMeasurementEntity entity = new QuantityMeasurementEntity(
-                    op1.getValue(), op1.getUnit().name(), op1.getUnit().getMeasurementType(),
-                    op2.getValue(), op2.getUnit().name(), op2.getUnit().getMeasurementType(),
-                    diff.getValue(), ((Enum<?>) diff.getUnit()).name(), operationType
+                    op1.getValue(), op1.getUnitName(), op1.getMeasurementType(),
+                    op2.getValue(), op2.getUnitName(), op2.getMeasurementType(),
+                    operation, diff.getValue(), ((Enum<?>) diff.getUnit()).name(),
+                    diff.getUnit().getMeasurementType() + "Unit", null, false
             );
-            repository.save(entity);
-            LOGGER.fine("Subtraction result: " + resultDto);
-            return resultDto;
+            QuantityMeasurementEntity saved = repository.save(entity);
+            return QuantityMeasurementDTO.fromEntity(saved);
+
         } catch (Exception e) {
             LOGGER.log(Level.WARNING, "Subtraction failed: " + e.getMessage(), e);
-            QuantityMeasurementEntity entity = new QuantityMeasurementEntity(e.getMessage(), operationType);
+            QuantityMeasurementEntity entity = new QuantityMeasurementEntity(e.getMessage(), operation, true);
             repository.save(entity);
             throw new QuantityMeasurementException(e.getMessage(), e);
         }
     }
 
     @Override
-    public double divide(QuantityDTO op1, QuantityDTO op2) {
-        String operationType = "division";
+    public QuantityMeasurementDTO divide(QuantityDTO op1, QuantityDTO op2) {
+        String operation = "divide";
         try {
             if (op1 == null || op2 == null) {
                 throw new IllegalArgumentException("Operands cannot be null");
             }
-            LOGGER.fine("Dividing: " + op1 + " / " + op2);
+            LOGGER.fine("Service: dividing " + op1 + " / " + op2);
 
             IMeasurable dom1 = mapToDomainUnit(op1.getUnit());
             IMeasurable dom2 = mapToDomainUnit(op2.getUnit());
@@ -239,19 +223,36 @@ public class QuantityMeasurementServiceImpl implements IQuantityMeasurementServi
             double ratio = q1.divide(q2);
 
             QuantityMeasurementEntity entity = new QuantityMeasurementEntity(
-                    op1.getValue(), op1.getUnit().name(), op1.getUnit().getMeasurementType(),
-                    op2.getValue(), op2.getUnit().name(), op2.getUnit().getMeasurementType(),
-                    ratio, "Dimensionless", operationType
+                    op1.getValue(), op1.getUnitName(), op1.getMeasurementType(),
+                    op2.getValue(), op2.getUnitName(), op2.getMeasurementType(),
+                    operation, ratio, "Dimensionless", "Dimensionless", null, false
             );
-            repository.save(entity);
-            LOGGER.fine("Division result: " + ratio);
-            return ratio;
+            QuantityMeasurementEntity saved = repository.save(entity);
+            return QuantityMeasurementDTO.fromEntity(saved);
+
         } catch (Exception e) {
             LOGGER.log(Level.WARNING, "Division failed: " + e.getMessage(), e);
-            QuantityMeasurementEntity entity = new QuantityMeasurementEntity(e.getMessage(), operationType);
+            QuantityMeasurementEntity entity = new QuantityMeasurementEntity(e.getMessage(), operation, true);
             repository.save(entity);
             throw new QuantityMeasurementException(e.getMessage(), e);
         }
+    }
+
+    @Override
+    public List<QuantityMeasurementDTO> getHistoryByOperation(String operation) {
+        List<QuantityMeasurementEntity> list = repository.findByOperation(operation.toLowerCase());
+        return QuantityMeasurementDTO.fromEntityList(list);
+    }
+
+    @Override
+    public List<QuantityMeasurementDTO> getHistoryByMeasurementType(String measurementType) {
+        List<QuantityMeasurementEntity> list = repository.findByThisMeasurementType(measurementType);
+        return QuantityMeasurementDTO.fromEntityList(list);
+    }
+
+    @Override
+    public long getCountByOperation(String operation) {
+        return repository.countByOperationAndErrorFalse(operation.toLowerCase());
     }
 
     private IMeasurable mapToDomainUnit(QuantityDTO.IMeasurableUnit dtoUnit) {
@@ -268,22 +269,5 @@ public class QuantityMeasurementServiceImpl implements IQuantityMeasurementServi
             return TemperatureUnit.valueOf(dtoUnit.name());
         }
         throw new IllegalArgumentException("Unsupported unit type: " + dtoUnit.getClass().getName());
-    }
-
-    private QuantityDTO.IMeasurableUnit mapToDtoUnit(IMeasurable domainUnit) {
-        if (domainUnit == null) {
-            return null;
-        }
-        String name = ((Enum<?>) domainUnit).name();
-        if (domainUnit instanceof LengthUnit) {
-            return QuantityDTO.LengthUnit.valueOf(name);
-        } else if (domainUnit instanceof WeightUnit) {
-            return QuantityDTO.WeightUnit.valueOf(name);
-        } else if (domainUnit instanceof VolumeUnit) {
-            return QuantityDTO.VolumeUnit.valueOf(name);
-        } else if (domainUnit instanceof TemperatureUnit) {
-            return QuantityDTO.TemperatureUnit.valueOf(name);
-        }
-        throw new IllegalArgumentException("Unsupported domain unit: " + domainUnit.getClass().getName());
     }
 }

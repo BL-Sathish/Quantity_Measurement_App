@@ -1,84 +1,128 @@
 package com.app.quantitymeasurement.controller;
 
-import com.app.quantitymeasurement.entity.QuantityDTO;
+import com.app.quantitymeasurement.model.QuantityDTO;
+import com.app.quantitymeasurement.model.QuantityMeasurementDTO;
 import com.app.quantitymeasurement.services.IQuantityMeasurementService;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+import java.util.Arrays;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+/**
+ * Unit tests for QuantityMeasurementController.
+ * Uses Mockito to isolate the controller from the service layer.
+ */
+@ExtendWith(MockitoExtension.class)
 class QuantityMeasurementControllerTest {
 
-    private IQuantityMeasurementService mockService;
+    @Mock
+    private IQuantityMeasurementService service;
+
+    @InjectMocks
     private QuantityMeasurementController controller;
 
-    @BeforeEach
-    void setUp() {
-        mockService = mock(IQuantityMeasurementService.class);
-        controller = new QuantityMeasurementController(mockService);
-    }
-
     @Test
-    void testPerformComparison() {
+    void testCompareQuantities() {
         QuantityDTO op1 = new QuantityDTO(1.0, QuantityDTO.LengthUnit.FEET);
         QuantityDTO op2 = new QuantityDTO(12.0, QuantityDTO.LengthUnit.INCH);
+        QuantityInputDTO input = new QuantityInputDTO(op1, op2);
 
-        when(mockService.compare(op1, op2)).thenReturn(true);
+        QuantityMeasurementDTO expected = new QuantityMeasurementDTO();
+        expected.setOperation("compare");
+        expected.setResultString("true");
+        expected.setError(false);
 
-        boolean result = controller.performComparison(op1, op2);
-        assertTrue(result);
-        verify(mockService, times(1)).compare(op1, op2);
+        when(service.compare(op1, op2)).thenReturn(expected);
+
+        QuantityMeasurementDTO result = controller.compareQuantities(input);
+        assertEquals("compare", result.getOperation());
+        assertEquals("true", result.getResultString());
+        assertFalse(result.getError());
+        verify(service, times(1)).compare(op1, op2);
     }
 
     @Test
-    void testPerformConversion() {
-        QuantityDTO op = new QuantityDTO(1.0, QuantityDTO.LengthUnit.YARD);
-        QuantityDTO expected = new QuantityDTO(3.0, QuantityDTO.LengthUnit.FEET);
+    void testConvertQuantity() {
+        QuantityDTO op1 = new QuantityDTO(1.0, QuantityDTO.LengthUnit.YARD);
+        QuantityDTO op2 = new QuantityDTO(0.0, QuantityDTO.LengthUnit.FEET);
+        QuantityInputDTO input = new QuantityInputDTO(op1, op2);
 
-        when(mockService.convert(op, QuantityDTO.LengthUnit.FEET)).thenReturn(expected);
+        QuantityMeasurementDTO expected = new QuantityMeasurementDTO();
+        expected.setOperation("convert");
+        expected.setResultValue(3.0);
+        expected.setResultUnit("FEET");
+        expected.setError(false);
 
-        QuantityDTO result = controller.performConversion(op, QuantityDTO.LengthUnit.FEET);
-        assertEquals(expected, result);
-        verify(mockService, times(1)).convert(op, QuantityDTO.LengthUnit.FEET);
+        when(service.convert(eq(op1), eq(QuantityDTO.LengthUnit.FEET))).thenReturn(expected);
+
+        QuantityMeasurementDTO result = controller.convertQuantity(input);
+        assertEquals("convert", result.getOperation());
+        assertEquals(3.0, result.getResultValue());
+        assertEquals("FEET", result.getResultUnit());
+        verify(service, times(1)).convert(eq(op1), eq(QuantityDTO.LengthUnit.FEET));
     }
 
     @Test
-    void testPerformAddition() {
+    void testAddQuantities() {
         QuantityDTO op1 = new QuantityDTO(1.0, QuantityDTO.LengthUnit.FEET);
         QuantityDTO op2 = new QuantityDTO(12.0, QuantityDTO.LengthUnit.INCH);
-        QuantityDTO expected = new QuantityDTO(2.0, QuantityDTO.LengthUnit.FEET);
+        QuantityInputDTO input = new QuantityInputDTO(op1, op2);
 
-        when(mockService.add(op1, op2, QuantityDTO.LengthUnit.FEET)).thenReturn(expected);
+        QuantityMeasurementDTO expected = new QuantityMeasurementDTO();
+        expected.setOperation("add");
+        expected.setResultValue(2.0);
+        expected.setResultUnit("FEET");
+        expected.setError(false);
 
-        QuantityDTO result = controller.performAddition(op1, op2, QuantityDTO.LengthUnit.FEET);
-        assertEquals(expected, result);
-        verify(mockService, times(1)).add(op1, op2, QuantityDTO.LengthUnit.FEET);
+        when(service.add(eq(op1), eq(op2), any())).thenReturn(expected);
+
+        QuantityMeasurementDTO result = controller.addQuantities(input);
+        assertEquals("add", result.getOperation());
+        assertEquals(2.0, result.getResultValue());
+        verify(service, times(1)).add(eq(op1), eq(op2), any());
     }
 
     @Test
-    void testPerformSubtraction() {
-        QuantityDTO op1 = new QuantityDTO(2.0, QuantityDTO.LengthUnit.FEET);
-        QuantityDTO op2 = new QuantityDTO(12.0, QuantityDTO.LengthUnit.INCH);
-        QuantityDTO expected = new QuantityDTO(1.0, QuantityDTO.LengthUnit.FEET);
+    void testGetOperationHistory() {
+        QuantityMeasurementDTO dto1 = new QuantityMeasurementDTO();
+        dto1.setOperation("compare");
+        QuantityMeasurementDTO dto2 = new QuantityMeasurementDTO();
+        dto2.setOperation("compare");
+        List<QuantityMeasurementDTO> expected = Arrays.asList(dto1, dto2);
 
-        when(mockService.subtract(op1, op2, QuantityDTO.LengthUnit.FEET)).thenReturn(expected);
+        when(service.getHistoryByOperation("compare")).thenReturn(expected);
 
-        QuantityDTO result = controller.performSubtraction(op1, op2, QuantityDTO.LengthUnit.FEET);
-        assertEquals(expected, result);
-        verify(mockService, times(1)).subtract(op1, op2, QuantityDTO.LengthUnit.FEET);
+        List<QuantityMeasurementDTO> result = controller.getOperationHistory("compare");
+        assertEquals(2, result.size());
+        verify(service, times(1)).getHistoryByOperation("compare");
     }
 
     @Test
-    void testPerformDivision() {
-        QuantityDTO op1 = new QuantityDTO(6.0, QuantityDTO.LengthUnit.FEET);
-        QuantityDTO op2 = new QuantityDTO(3.0, QuantityDTO.LengthUnit.FEET);
+    void testGetMeasurementTypeHistory() {
+        QuantityMeasurementDTO dto1 = new QuantityMeasurementDTO();
+        dto1.setThisMeasurementType("LengthUnit");
+        List<QuantityMeasurementDTO> expected = List.of(dto1);
 
-        when(mockService.divide(op1, op2)).thenReturn(2.0);
+        when(service.getHistoryByMeasurementType("LengthUnit")).thenReturn(expected);
 
-        double result = controller.performDivision(op1, op2);
-        assertEquals(2.0, result);
-        verify(mockService, times(1)).divide(op1, op2);
+        List<QuantityMeasurementDTO> result = controller.getMeasurementTypeHistory("LengthUnit");
+        assertEquals(1, result.size());
+        verify(service, times(1)).getHistoryByMeasurementType("LengthUnit");
+    }
+
+    @Test
+    void testGetOperationCount() {
+        when(service.getCountByOperation("compare")).thenReturn(5L);
+
+        long count = controller.getOperationCount("compare");
+        assertEquals(5L, count);
+        verify(service, times(1)).getCountByOperation("compare");
     }
 }

@@ -1,62 +1,53 @@
 package com.app.quantitymeasurement.services;
 
-import com.app.quantitymeasurement.entity.QuantityDTO;
+import com.app.quantitymeasurement.model.QuantityDTO;
+import com.app.quantitymeasurement.model.QuantityMeasurementDTO;
+
+import java.util.List;
 
 /**
  * Service interface for quantity measurement operations.
- * Following the Dependency Injection and Interface Segregation Principles.
+ * Modernized for UC17 Spring integration returning DTOs.
  */
 public interface IQuantityMeasurementService {
     
     /**
-     * Compares two quantities for equality.
-     * Maps inputs to internal models, performs the comparison, saves to repository, and returns result.
-     *
-     * @param op1 the first quantity DTO
-     * @param op2 the second quantity DTO
-     * @return true if equal, false otherwise
+     * Compares two quantities and returns comparison DTO.
      */
-    boolean compare(QuantityDTO op1, QuantityDTO op2);
+    QuantityMeasurementDTO compare(QuantityDTO op1, QuantityDTO op2);
 
     /**
-     * Converts a quantity to a target unit.
-     * Maps inputs to internal models, performs the conversion, saves to repository, and returns result.
-     *
-     * @param op the source quantity DTO
-     * @param targetUnit the target unit DTO
-     * @return a new QuantityDTO with converted value and target unit
+     * Converts a quantity and returns conversion DTO.
      */
-    QuantityDTO convert(QuantityDTO op, QuantityDTO.IMeasurableUnit targetUnit);
+    QuantityMeasurementDTO convert(QuantityDTO op, QuantityDTO.IMeasurableUnit targetUnit);
 
     /**
-     * Adds two quantities and returns the result in the target unit.
-     * Maps inputs to internal models, performs addition, saves to repository, and returns result.
-     *
-     * @param op1 the first quantity DTO
-     * @param op2 the second quantity DTO
-     * @param targetUnit the target unit DTO (if null, defaults to op1's unit)
-     * @return a new QuantityDTO with the sum in target unit
+     * Adds two quantities and returns result DTO.
      */
-    QuantityDTO add(QuantityDTO op1, QuantityDTO op2, QuantityDTO.IMeasurableUnit targetUnit);
+    QuantityMeasurementDTO add(QuantityDTO op1, QuantityDTO op2, QuantityDTO.IMeasurableUnit targetUnit);
 
     /**
-     * Subtracts the second quantity from the first and returns the result in the target unit.
-     * Maps inputs to internal models, performs subtraction, saves to repository, and returns result.
-     *
-     * @param op1 the first quantity DTO (minuend)
-     * @param op2 the second quantity DTO (subtrahend)
-     * @param targetUnit the target unit DTO (if null, defaults to op1's unit)
-     * @return a new QuantityDTO with the difference in target unit
+     * Subtracts the second quantity from the first and returns difference DTO.
      */
-    QuantityDTO subtract(QuantityDTO op1, QuantityDTO op2, QuantityDTO.IMeasurableUnit targetUnit);
+    QuantityMeasurementDTO subtract(QuantityDTO op1, QuantityDTO op2, QuantityDTO.IMeasurableUnit targetUnit);
 
     /**
-     * Divides the first quantity by the second, returning a dimensionless ratio.
-     * Maps inputs to internal models, performs division, saves to repository, and returns ratio.
-     *
-     * @param op1 the first quantity DTO
-     * @param op2 the second quantity DTO
-     * @return a dimensionless ratio
+     * Divides the first quantity by the second, returning ratio DTO.
      */
-    double divide(QuantityDTO op1, QuantityDTO op2);
+    QuantityMeasurementDTO divide(QuantityDTO op1, QuantityDTO op2);
+
+    /**
+     * Retrieves operations history filtered by operation type.
+     */
+    List<QuantityMeasurementDTO> getHistoryByOperation(String operation);
+
+    /**
+     * Retrieves operations history filtered by measurement type.
+     */
+    List<QuantityMeasurementDTO> getHistoryByMeasurementType(String measurementType);
+
+    /**
+     * Returns total count of operations for a specific type.
+     */
+    long getCountByOperation(String operation);
 }
