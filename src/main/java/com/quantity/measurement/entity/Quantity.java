@@ -1,5 +1,7 @@
-package com.quantity.measurement;
+package com.quantity.measurement.entity;
 
+import com.quantity.measurement.unit.IMeasurable;
+import com.quantity.measurement.unit.TemperatureUnit;
 import java.util.Objects;
 
 /**

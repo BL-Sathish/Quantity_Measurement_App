@@ -1,4 +1,4 @@
-package com.quantity.measurement;
+package com.quantity.measurement.unit;
 
 /**
  * Standalone enum representing length units with full conversion responsibility.

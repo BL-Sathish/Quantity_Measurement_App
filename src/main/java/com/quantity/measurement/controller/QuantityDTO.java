@@ -1,4 +1,4 @@
-package com.quantity.measurement;
+package com.quantity.measurement.controller;
 
 /**
  * Data Transfer Object (DTO) class for transferring measurement data.

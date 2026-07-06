@@ -1,4 +1,4 @@
-package com.quantity.measurement;
+package com.quantity.measurement.util;
 
 import java.io.IOException;
 import java.io.OutputStream;

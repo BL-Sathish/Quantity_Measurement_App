@@ -1,4 +1,6 @@
-package com.quantity.measurement;
+package com.quantity.measurement.service;
+
+import com.quantity.measurement.controller.QuantityDTO;
 
 /**
  * Service interface for quantity measurement operations.

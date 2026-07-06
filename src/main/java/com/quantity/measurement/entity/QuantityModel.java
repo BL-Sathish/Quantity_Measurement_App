@@ -1,4 +1,6 @@
-package com.quantity.measurement;
+package com.quantity.measurement.entity;
+
+import com.quantity.measurement.unit.IMeasurable;
 
 /**
  * Generic POJO class representing a quantity internally.

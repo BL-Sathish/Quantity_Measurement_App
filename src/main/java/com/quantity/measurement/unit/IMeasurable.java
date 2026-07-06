@@ -1,4 +1,4 @@
-package com.quantity.measurement;
+package com.quantity.measurement.unit;
 
 /**
  * Common interface for measurement units across different categories.

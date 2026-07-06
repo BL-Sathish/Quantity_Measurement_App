@@ -1,4 +1,4 @@
-package com.quantity.measurement;
+package com.quantity.measurement.exception;
 
 /**
  * Custom unchecked exception class for quantity measurement errors.

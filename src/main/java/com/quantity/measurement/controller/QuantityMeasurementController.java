@@ -1,4 +1,6 @@
-package com.quantity.measurement;
+package com.quantity.measurement.controller;
+
+import com.quantity.measurement.service.IQuantityMeasurementService;
 
 /**
  * Controller layer exposing API methods for quantity measurement operations.

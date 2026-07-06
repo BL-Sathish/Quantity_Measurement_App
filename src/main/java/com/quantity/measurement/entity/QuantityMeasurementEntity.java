@@ -1,4 +1,4 @@
-package com.quantity.measurement;
+package com.quantity.measurement.entity;
 
 import java.io.Serializable;
 import java.util.UUID;

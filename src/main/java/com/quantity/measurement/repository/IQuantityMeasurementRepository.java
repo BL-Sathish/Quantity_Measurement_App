@@ -1,5 +1,6 @@
-package com.quantity.measurement;
+package com.quantity.measurement.repository;
 
+import com.quantity.measurement.entity.QuantityMeasurementEntity;
 import java.util.List;
 
 /**
